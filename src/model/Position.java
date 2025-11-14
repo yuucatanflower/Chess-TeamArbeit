@@ -16,7 +16,7 @@ public record Position(int row, int col) {
     public static Position fromAlgebraicNotation(String algebraicNotation) {
         if(algebraicNotation.length() != 2 || algebraicNotation == null){
             System.out.println("Invalid String Input");
-            //TODO throw an exception here
+            //TODO throw an exception here asdjfhsdjihfgdsahjfs
         }
         char columnChar = algebraicNotation.charAt(0);
         char rowChar = algebraicNotation.charAt(1);
