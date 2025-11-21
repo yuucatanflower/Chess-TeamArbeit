@@ -14,5 +14,12 @@ public class Main {
         System.out.println(test_e5.row());
         System.out.println(test_e5.col());
         System.out.println();
+
+        try{
+            Position test = new Position(9, 9);
+            System.out.println(test.toAlgebraicNotation());
+        } catch(Exception e){
+            System.out.println(e);
+        }
     }
 }
