@@ -9,4 +9,5 @@ public class KnightMoveStrategy implements IMoveStrategy {
         //TODO for this one we already have an example on miro , write it here
         return List.of();
     }
+
 }

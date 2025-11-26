@@ -2,6 +2,8 @@ import model.Position;
 
 public class Main {
     public static void main(String[] args) {
+
+        //TODO somehow organize those tests!! best if we do something like jUnit testing like in the uebungs
         Position a1 = new Position(7, 0);
         Position e5 = new Position(3, 4);
         System.out.println(a1.toAlgebraicNotation());
