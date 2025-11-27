@@ -1,8 +1,6 @@
 package model;
 
 public record Position(int row, int col) {
-    // TODO dont forget to write exceptions in the methods!!! later
-    // Like this? Im aware there are more types of exceptions but i think this should work
 
     public String toAlgebraicNotation() {
         if (row < 0 || col < 0 || row > 7 || col > 7) {
