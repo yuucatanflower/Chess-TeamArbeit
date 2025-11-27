@@ -40,7 +40,6 @@ public class KnightMoveStrategy implements IMoveStrategy {
                     // Square is occupied, check if it's an enemy
                     if (targetPiece.getColor() != currentColor) {
                         validMoves.add(targetPos); // Valid capture
-
                     }
                     // Can't move to a square occupied by a friendly piece
                 }
