@@ -47,6 +47,23 @@ public class Board {
         return target; // return captured piece so GameState (later) can save it in the Move record
     } // move execution method
 
+    public void undoMove(Position from , Position to , Piece capturedPiece , boolean originalHasMoved) {
+        Piece piece = getPieceAt(to); // our piece is currently at the "to" position , we want to get it back to from
+        setPieceAt(from, piece); // return it to "from" spot
+
+        if (piece != null) {
+            piece.internal_setPosition(from);
+            piece.internal_setHasMoved(originalHasMoved); // restore the pieces hasMoved state (e.g if it hasn't moved before the move we are undoing right now set it back to false if it was false before
+        } // originalHasMoved is going to be handled in GameState as well , and will be stored in a Move object (Move's isFirstMove variable)
+
+        setPieceAt(to, capturedPiece);
+        if (capturedPiece != null) {
+            capturedPiece.internal_setPosition(to); // ensure the "resurrected" piece knows where it is
+        }
+    }
+
+
+    //board init
     public void initializeBoard(){
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -83,20 +100,7 @@ public class Board {
         grid[7][6] = new Piece(new Position(7, 6), Color.WHITE, PieceType.KNIGHT, new KnightMoveStrategy());
         grid[7][7] = new Piece(new Position(7, 7), Color.WHITE, PieceType.ROOK, new RookMoveStrategy());
     }
-    public void undoMove(Position from , Position to , Piece capturedPiece , boolean originalHasMoved) {
-        Piece piece = getPieceAt(to); // our piece is currently at the "to" position , we want to get it back to from
-        setPieceAt(from, piece); // return it to "from" spot
 
-        if (piece != null) {
-            piece.internal_setPosition(from);
-            piece.internal_setHasMoved(originalHasMoved); // restore the pieces hasMoved state (e.g if it hasn't moved before the move we are undoing right now set it back to false if it was false before
-        } // originalHasMoved is going to be handled in GameState as well , and will be stored in a Move object (Move's isFirstMove variable)
-
-        setPieceAt(to, capturedPiece);
-        if (capturedPiece != null) {
-            capturedPiece.internal_setPosition(to); // ensure the "resurrected" piece knows where it is
-        }
-    }
 
 }
 
