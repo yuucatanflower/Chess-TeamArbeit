@@ -57,5 +57,10 @@ public class Piece {
     void internal_setPosition(Position position) {
         this.position = position;
     } // needed for board undoMove (hope it makes sense)
+
+    @Override
+    public String toString() {
+        return "Piece: " + this.type.toString() + ", Color: " + this.color.toString() + ", Position: " + this.position.toAlgebraicNotation();
+    }
 }
 

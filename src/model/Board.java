@@ -11,10 +11,13 @@ public class Board {
     // ACCESSORS / HELPERS
 
     public Piece getPieceAt(Position pos) {
-        // check if empty?
-
         return grid[pos.row()][pos.col()];
     } //returns piece at given position
+
+    public Piece getPieceAt(String algebraicNotation) {
+        Position pos = Position.fromAlgebraicNotation(algebraicNotation);
+        return grid[pos.row()][pos.col()];
+    }
 
     public void setPieceAt(Position pos, Piece piece) {
         grid[pos.row()][pos.col()] = piece;
@@ -32,21 +35,23 @@ public class Board {
     //TODO max \/ \/ \/
 
     //MOVE MANAGEMENT
-
+    //TODO create a Move object after making a move (max)
     public Piece executeMove(Position from , Position to) {
-        Piece piece = getPieceAt(from);
+        Piece movedPiece = getPieceAt(from);
         Piece target = getPieceAt(to);
 
-        setPieceAt(to, piece);
+        setPieceAt(to, movedPiece);
         setPieceAt(from, null); // update the grid
 
-        if(piece !=null ){
-            piece.internal_setPosition(to); // update pieces "memory"
-            piece.internal_setHasMoved(true);
+        if(movedPiece !=null ){
+            movedPiece.internal_setPosition(to); // update pieces "memory"
+            movedPiece.internal_setHasMoved(true);
         }
         return target; // return captured piece so GameState (later) can save it in the Move record
     } // move execution method
 
+
+    //TODO max ( make work with Move object)
     public void undoMove(Position from , Position to , Piece capturedPiece , boolean originalHasMoved) {
         Piece piece = getPieceAt(to); // our piece is currently at the "to" position , we want to get it back to from
         setPieceAt(from, piece); // return it to "from" spot
@@ -61,7 +66,6 @@ public class Board {
             capturedPiece.internal_setPosition(to); // ensure the "resurrected" piece knows where it is
         }
     }
-
 
     //board init
     public void initializeBoard(){
