@@ -6,9 +6,9 @@ import java.util.List;
 public class Piece {
 
     private Position position;
-    private Color color;
-    private PieceType type;
-    private IMoveStrategy moveStrategy;
+    private final Color color;
+    private final PieceType type;
+    private final IMoveStrategy moveStrategy;
     private boolean hasMoved;
 
     public Piece(Position position, Color color, PieceType type, IMoveStrategy moveStrategy) {
@@ -19,6 +19,7 @@ public class Piece {
             this.hasMoved = false;
     }
 
+    // GETTERS
     public Position getPosition() {
         return position;
     }
@@ -35,19 +36,26 @@ public class Piece {
         return hasMoved;
     }
 
+
+    // CORE LOGIC
     public void moveTo(Position newPosition) {
         this.position = newPosition;
         this.hasMoved = true;
     }
 
     public List<Position> getValidMoves(Board board) {
-        List<Position> validMoves = new ArrayList<>();
-
-        validMoves.addAll(this.moveStrategy.getMoves(this, board));
-
-        return validMoves;
+        return moveStrategy.getMoves(this, board);
     }
 
-    //TODO rest of methods ( check Miro )
+    //TODO max \/ \/ \/
+
+    // STATE CHANGERS (FOR BOARD CLASS)
+    void internal_setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
+    } //move without forcing hasMoved to true , only called by Board undoMove
+
+    void internal_setPosition(Position position) {
+        this.position = position;
+    } // needed for board undoMove (hope it makes sense)
 }
 
