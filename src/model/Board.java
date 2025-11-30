@@ -52,7 +52,6 @@ public class Board {
         return target; // return captured piece so GameState (later) can save it in the Move record
     } // move execution method
 
-
     public void undoMove(Position from , Position to , Piece capturedPiece , boolean originalHasMoved) {
         Piece piece = getPieceAt(to); // our piece is currently at the "to" position , we want to get it back to from
         setPieceAt(from, piece); // return it to "from" spot

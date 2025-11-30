@@ -2,6 +2,7 @@ package model.strategies;
 
 import model.Board;
 import model.Piece;
+import model.coreData.Color;
 import model.coreData.Position;
 
 import java.util.ArrayList;

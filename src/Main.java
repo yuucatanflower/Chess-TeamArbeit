@@ -30,5 +30,6 @@ public class Main {
         System.out.println(board.getPieceAt("h8").toString());
         System.out.println(board.getPieceAt("c1").toString());
         System.out.println(board.getPieceAt("e2").toString());
+        board.printBoard();
     }
 }
