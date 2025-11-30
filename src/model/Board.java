@@ -106,6 +106,80 @@ public class Board {
         grid[7][7] = new Piece(new Position(7, 7), Color.WHITE, PieceType.ROOK, new RookMoveStrategy());
     }
 
+    public void printBoard() {
 
+        // for loop rows
+        for (int row = 0; row < 8; row++) {
+            System.out.print((8 - row) + " | ");
+
+            // for loop columns
+            for (int col = 0; col < 8; col++) {
+                Piece piece = grid[row][col];
+
+                if (piece == null) {
+                    System.out.print(". ");
+                } else {
+                    char symbol = 0;
+
+                    switch (piece.getType()) {
+
+                        case PAWN:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♟';
+                            }else{
+                                symbol = '♙';
+                            }
+                            break;
+
+                        case ROOK:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♜';
+                            }else{
+                                symbol = '♖';
+                            }
+                            break;
+
+                        case KNIGHT:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♞';
+                            }else{
+                                symbol = '♘';
+                            }
+                            break;
+
+                        case BISHOP:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♝';
+                            }else{
+                                symbol = '♗';
+                            }
+                            break;
+
+                        case QUEEN:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♛';
+                            }else{
+                                symbol = '♕';
+                            }
+                            break;
+
+                        case KING:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♚';
+                            }else{
+                                symbol = '♔';
+                            }
+                            break;
+
+
+                    }
+
+                    System.out.print(symbol + " ");
+                }
+            }
+            System.out.println("|");
+        }
+
+    }
 }
 
