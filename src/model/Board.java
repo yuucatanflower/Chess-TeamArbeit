@@ -106,6 +106,7 @@ public class Board {
     }
 
     public void printBoard() {
+        System.out.println("\n  +------------------------+");
 
         // for loop rows
         for (int row = 0; row < 8; row++) {
@@ -124,49 +125,49 @@ public class Board {
 
                         case PAWN:
                             if (piece.getColor() == Color.BLACK) {
-                                symbol = '♟';
-                            }else{
                                 symbol = '♙';
+                            }else{
+                                symbol = '♟';
                             }
                             break;
 
                         case ROOK:
                             if (piece.getColor() == Color.BLACK) {
-                                symbol = '♜';
-                            }else{
                                 symbol = '♖';
+                            }else{
+                                symbol = '♜';
                             }
                             break;
 
                         case KNIGHT:
                             if (piece.getColor() == Color.BLACK) {
-                                symbol = '♞';
-                            }else{
                                 symbol = '♘';
+                            }else{
+                                symbol = '♞';
                             }
                             break;
 
                         case BISHOP:
                             if (piece.getColor() == Color.BLACK) {
-                                symbol = '♝';
-                            }else{
                                 symbol = '♗';
+                            }else{
+                                symbol = '♝';
                             }
                             break;
 
                         case QUEEN:
                             if (piece.getColor() == Color.BLACK) {
-                                symbol = '♛';
-                            }else{
                                 symbol = '♕';
+                            }else{
+                                symbol = '♛';
                             }
                             break;
 
                         case KING:
                             if (piece.getColor() == Color.BLACK) {
-                                symbol = '♚';
-                            }else{
                                 symbol = '♔';
+                            }else{
+                                symbol = '♚';
                             }
                             break;
 
@@ -178,6 +179,9 @@ public class Board {
             }
             System.out.println("|");
         }
+        System.out.println("  +------------------------+");
+        System.out.println("    a b c d e f g h\n");
+
 
     }
 }
