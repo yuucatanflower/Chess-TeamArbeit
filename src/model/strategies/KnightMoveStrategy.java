@@ -1,7 +1,9 @@
-package model;
+package model.strategies;
 
-import javax.xml.validation.Validator;
-import java.lang.invoke.VarHandle;
+import model.*;
+import model.coreData.Color;
+import model.coreData.Position;
+
 import java.util.ArrayList;
 import java.util.List;
 

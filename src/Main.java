@@ -1,5 +1,4 @@
 import model.Board;
-import model.Position;
 
 public class Main {
     public static void main(String[] args) {

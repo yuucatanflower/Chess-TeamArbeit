@@ -1,5 +1,10 @@
 package model;
 
+import model.coreData.Color;
+import model.coreData.PieceType;
+import model.coreData.Position;
+import model.strategies.*;
+
 public class Board {
     private Piece[][] grid;
 
@@ -32,10 +37,7 @@ public class Board {
         return pos.row() >= 0 && pos.row() < 8 && pos.col() >= 0 && pos.col() < 8;
     } // checks if the position is valid
 
-    //TODO max \/ \/ \/
-
     //MOVE MANAGEMENT
-    //TODO create a Move object after making a move (max)
     public Piece executeMove(Position from , Position to) {
         Piece movedPiece = getPieceAt(from);
         Piece target = getPieceAt(to);
@@ -51,7 +53,6 @@ public class Board {
     } // move execution method
 
 
-    //TODO max ( make work with Move object)
     public void undoMove(Position from , Position to , Piece capturedPiece , boolean originalHasMoved) {
         Piece piece = getPieceAt(to); // our piece is currently at the "to" position , we want to get it back to from
         setPieceAt(from, piece); // return it to "from" spot

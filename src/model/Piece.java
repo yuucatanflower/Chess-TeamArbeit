@@ -1,6 +1,10 @@
 package model;
 
-import java.util.ArrayList;
+import model.coreData.Color;
+import model.coreData.PieceType;
+import model.coreData.Position;
+import model.strategies.IMoveStrategy;
+
 import java.util.List;
 
 public class Piece {
@@ -46,8 +50,6 @@ public class Piece {
     public List<Position> getValidMoves(Board board) {
         return moveStrategy.getMoves(this, board);
     }
-
-    //TODO max \/ \/ \/
 
     // STATE CHANGERS (FOR BOARD CLASS)
     void internal_setHasMoved(boolean hasMoved) {

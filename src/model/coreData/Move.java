@@ -1,4 +1,6 @@
-package model;
+package model.coreData;
+
+import model.Piece;
 
 public record Move(
         Piece movedPiece, //piece that makes a move

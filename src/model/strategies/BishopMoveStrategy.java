@@ -1,4 +1,8 @@
-package model;
+package model.strategies;
+
+import model.*;
+import model.coreData.Color;
+import model.coreData.Position;
 
 import java.util.ArrayList;
 import java.util.List;
