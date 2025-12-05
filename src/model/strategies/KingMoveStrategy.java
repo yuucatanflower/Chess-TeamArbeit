@@ -16,7 +16,7 @@ public class KingMoveStrategy implements IMoveStrategy {
         Position currentPos = piece.getPosition();
         Color currentColor = piece.getColor();
 
-        int[][] knightMoves = {
+        int[][] kingMoves = {
                 {-1, 0},    // Up
                 {-1, -1},   // Up left
                 {-1, 1},    // Up right
@@ -27,7 +27,7 @@ public class KingMoveStrategy implements IMoveStrategy {
                 {1, 1},     // Down right
         };
 
-        for (int[] move : knightMoves) {
+        for (int[] move : kingMoves) {
             int newRow = currentPos.row() + move[0];
             int newCol = currentPos.col() + move[1];
 

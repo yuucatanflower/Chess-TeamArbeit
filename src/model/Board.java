@@ -58,7 +58,7 @@ public class Board {
 
         if (piece != null) {
             piece.internal_setPosition(from);
-            piece.internal_setHasMoved(originalHasMoved); // restore the pieces hasMoved state (e.g if it hasn't moved before the move we are undoing right now set it back to false if it was false before
+            piece.internal_setHasMoved(originalHasMoved); // restore the pieces hasMoved state (e.g. if it hasn't moved before the move we are undoing right now set it back to false if it was false before
         } // originalHasMoved is going to be handled in GameState as well , and will be stored in a Move object (Move's isFirstMove variable)
 
         setPieceAt(to, capturedPiece);
