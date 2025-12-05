@@ -1,5 +1,10 @@
 package model;
 
+import model.coreData.Color;
+import model.coreData.PieceType;
+import model.coreData.Position;
+import model.strategies.*;
+
 public class Board {
     private Piece[][] grid;
 
@@ -11,10 +16,13 @@ public class Board {
     // ACCESSORS / HELPERS
 
     public Piece getPieceAt(Position pos) {
-        // check if empty?
-
         return grid[pos.row()][pos.col()];
     } //returns piece at given position
+
+    public Piece getPieceAt(String algebraicNotation) {
+        Position pos = Position.fromAlgebraicNotation(algebraicNotation);
+        return grid[pos.row()][pos.col()];
+    }
 
     public void setPieceAt(Position pos, Piece piece) {
         grid[pos.row()][pos.col()] = piece;
@@ -29,20 +37,17 @@ public class Board {
         return pos.row() >= 0 && pos.row() < 8 && pos.col() >= 0 && pos.col() < 8;
     } // checks if the position is valid
 
-    //TODO max \/ \/ \/
-
     //MOVE MANAGEMENT
-
     public Piece executeMove(Position from , Position to) {
-        Piece piece = getPieceAt(from);
+        Piece movedPiece = getPieceAt(from);
         Piece target = getPieceAt(to);
 
-        setPieceAt(to, piece);
+        setPieceAt(to, movedPiece);
         setPieceAt(from, null); // update the grid
 
-        if(piece !=null ){
-            piece.internal_setPosition(to); // update pieces "memory"
-            piece.internal_setHasMoved(true);
+        if(movedPiece !=null ){
+            movedPiece.internal_setPosition(to); // update pieces "memory"
+            movedPiece.internal_setHasMoved(true);
         }
         return target; // return captured piece so GameState (later) can save it in the Move record
     } // move execution method
@@ -53,7 +58,7 @@ public class Board {
 
         if (piece != null) {
             piece.internal_setPosition(from);
-            piece.internal_setHasMoved(originalHasMoved); // restore the pieces hasMoved state (e.g if it hasn't moved before the move we are undoing right now set it back to false if it was false before
+            piece.internal_setHasMoved(originalHasMoved); // restore the pieces hasMoved state (e.g. if it hasn't moved before the move we are undoing right now set it back to false if it was false before
         } // originalHasMoved is going to be handled in GameState as well , and will be stored in a Move object (Move's isFirstMove variable)
 
         setPieceAt(to, capturedPiece);
@@ -61,7 +66,6 @@ public class Board {
             capturedPiece.internal_setPosition(to); // ensure the "resurrected" piece knows where it is
         }
     }
-
 
     //board init
     public void initializeBoard(){
@@ -101,6 +105,84 @@ public class Board {
         grid[7][7] = new Piece(new Position(7, 7), Color.WHITE, PieceType.ROOK, new RookMoveStrategy());
     }
 
+    public void printBoard() {
+        System.out.println("\n  +------------------------+");
 
+        // for loop rows
+        for (int row = 0; row < 8; row++) {
+            System.out.print((8 - row) + " | ");
+
+            // for loop columns
+            for (int col = 0; col < 8; col++) {
+                Piece piece = grid[row][col];
+
+                if (piece == null) {
+                    System.out.print(". ");
+                } else {
+                    char symbol = 0;
+
+                    switch (piece.getType()) {
+
+                        case PAWN:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♙';
+                            }else{
+                                symbol = '♟';
+                            }
+                            break;
+
+                        case ROOK:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♖';
+                            }else{
+                                symbol = '♜';
+                            }
+                            break;
+
+                        case KNIGHT:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♘';
+                            }else{
+                                symbol = '♞';
+                            }
+                            break;
+
+                        case BISHOP:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♗';
+                            }else{
+                                symbol = '♝';
+                            }
+                            break;
+
+                        case QUEEN:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♕';
+                            }else{
+                                symbol = '♛';
+                            }
+                            break;
+
+                        case KING:
+                            if (piece.getColor() == Color.BLACK) {
+                                symbol = '♔';
+                            }else{
+                                symbol = '♚';
+                            }
+                            break;
+
+
+                    }
+
+                    System.out.print(symbol + " ");
+                }
+            }
+            System.out.println("|");
+        }
+        System.out.println("  +------------------------+");
+        System.out.println("    a b c d e f g h\n");
+
+
+    }
 }
 

@@ -1,4 +1,4 @@
-package model;
+package model.coreData;
 
 public record Position(int row, int col) {
 

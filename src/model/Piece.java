@@ -1,6 +1,10 @@
 package model;
 
-import java.util.ArrayList;
+import model.coreData.Color;
+import model.coreData.PieceType;
+import model.coreData.Position;
+import model.strategies.IMoveStrategy;
+
 import java.util.List;
 
 public class Piece {
@@ -47,8 +51,6 @@ public class Piece {
         return moveStrategy.getMoves(this, board);
     }
 
-    //TODO max \/ \/ \/
-
     // STATE CHANGERS (FOR BOARD CLASS)
     void internal_setHasMoved(boolean hasMoved) {
         this.hasMoved = hasMoved;
@@ -57,5 +59,10 @@ public class Piece {
     void internal_setPosition(Position position) {
         this.position = position;
     } // needed for board undoMove (hope it makes sense)
+
+    @Override
+    public String toString() {
+        return "Piece: " + this.type.toString() + ", Color: " + this.color.toString() + ", Position: " + this.position.toAlgebraicNotation();
+    }
 }
 

@@ -1,4 +1,8 @@
-package model;
+package model.strategies;
+
+import model.Board;
+import model.Piece;
+import model.coreData.Position;
 
 import java.util.List;
 
