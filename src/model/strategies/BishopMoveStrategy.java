@@ -16,10 +16,10 @@ public class BishopMoveStrategy implements IMoveStrategy {
         Color currentColor = piece.getColor();
 
         int[][] directions = {
-                {-1, 1},  // Up-Right ↗
-                {1, 1},   // Down-Right ↘
-                {1, -1},  // Down-Left ↙
-                {-1, -1}  // Up-Left ↖
+                {-1, 1},  // Up-Right
+                {1, 1},   // Down-Right
+                {1, -1},  // Down-Left
+                {-1, -1}  // Up-Left
         };
 
         for (int[] move : directions) {
@@ -47,7 +47,6 @@ public class BishopMoveStrategy implements IMoveStrategy {
                 newRow += move[0];
                 newCol += move[1];
             }
-            // If it's off the board, just ignore it and check the next move
         }
         return validMoves;
     }
