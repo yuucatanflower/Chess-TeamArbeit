@@ -10,9 +10,9 @@ public record Move(
         boolean isFirstMove // was it the pieces first move?
 ) {
     public Move {
-        if (movedPiece == null || from == null || to == null || from != to) {
-            throw new IllegalArgumentException("Move cannot have null piece or positions");
-        } // Compact Constructor ( google it ) for a quick validation
+        if (movedPiece == null || from == null || to == null || from.equals(to)) {
+            throw new IllegalArgumentException("Move cannot have null piece or positions, and must actually move.");
+        }
     }
 
     @Override

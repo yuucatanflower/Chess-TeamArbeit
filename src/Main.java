@@ -1,36 +1,62 @@
 import model.Board;
+import model.GameState;
 import model.coreData.Position;
+
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        GameState game =  new GameState();
+        Scanner input = new Scanner(System.in);
 
-        //TODO somehow organize those tests!! best if we do something like jUnit testing like in the uebungs
+        System.out.println("---GAME STARTED---");
+        System.out.println("Type moves as 'e2-e4' or 'undo' to revert move. Type 'exit' or 'quit' to end the game. ");
 
-//        Position a1 = new Position(7, 0);
-//        Position e5 = new Position(3, 4);
-//        System.out.println(a1.toAlgebraicNotation());
-//        System.out.println(e5.toAlgebraicNotation());
-//        System.out.println();
-//
-//
-//        Position test_e5 = Position.fromAlgebraicNotation("e5");
-//        System.out.println(test_e5.toAlgebraicNotation());
-//        System.out.println(test_e5.row());
-//        System.out.println(test_e5.col());
-//        System.out.println();
-//
-//        try{
-//            Position test = new Position(9, 9);
-//            System.out.println(test.toAlgebraicNotation());
-//        } catch(Exception e){
-//            System.out.println(e);
-//        }
+        while(!game.isGameOver()){
+            game.getBoard().printBoard();
+            System.out.println("STATUS: "+ game.getStatusMessage());
+            System.out.print("> "); // prompt move or undo
 
-        Board board = new Board();
-        board.initializeBoard();
-        System.out.println(board.getPieceAt("h8").toString());
-        System.out.println(board.getPieceAt("c1").toString());
-        System.out.println(board.getPieceAt("e2").toString());
-        board.printBoard();
+            String command = input.nextLine().trim();
+
+            //input processing
+            if(command.equalsIgnoreCase("exit") || command.equalsIgnoreCase("quit")) {
+                break;
+            }
+            if(command.equalsIgnoreCase("undo")) {
+                game.undo();
+                continue;
+            }
+
+            // move parsing ( expects 'e2-e4' type format )
+            if(isValidInputFormat(command)) {
+                try{
+                    String[] commandParts = command.split("-"); // splits the command on '-' into two elements and puts them in an array
+                    Position from = Position.fromAlgebraicNotation(commandParts[0]); // for 'e2-e4' that would be e2
+                    Position to = Position.fromAlgebraicNotation(commandParts[1]); // and e4
+
+                    boolean success = game.playTurn(from, to);
+                    if(success) {
+                        System.out.println("Move from " + from.toAlgebraicNotation() + " to " + to.toAlgebraicNotation());
+                    }else{
+                        System.out.println("Move failed!");
+                    }
+                }catch(Exception e){
+                    System.out.println("Error parsing move: Use 'e2-e4' format."); //if format is wrong
+                }
+            }else{
+                System.out.println("Unknown command! Type moves as 'e2-e4' or 'undo' to revert move.");//if command is not available
+            }
+        }
+        //final render: shows final board layout and status message
+        game.getBoard().printBoard();
+        System.out.println("FINAL STATUS: " + game.getStatusMessage());
+
+        System.out.println("Game Ended.");
+        input.close();
+    }
+    //regex check for "a1-a2" format
+    private static boolean isValidInputFormat(String input) {
+        return input.matches("[a-h][1-8]-[a-h][1-8]");
     }
 }
