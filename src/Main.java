@@ -18,7 +18,7 @@ public class Main {
             System.out.print("> "); // prompt move or undo
 
             String command = input.nextLine().trim();
-
+            //
             //input processing
             if(command.equalsIgnoreCase("exit") || command.equalsIgnoreCase("quit")) {
                 break;
