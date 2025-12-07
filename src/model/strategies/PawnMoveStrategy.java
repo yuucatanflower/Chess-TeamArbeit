@@ -37,22 +37,57 @@ public class PawnMoveStrategy implements IMoveStrategy {
         Position newPos = new Position(newRow, currentCol);
 
         // check bounds -> add valid move
-        if (isOnTheBoard(newRow, currentCol)){
-            if (board.getPieceAt(newPos) == null){
+        if (isOnTheBoard(newRow, currentCol)) {
+            if (board.getPieceAt(newPos) == null) {
                 validMoves.add(newPos);
 
-                // TODO double step forward
+                // double step forward
+                int doubleStepForward = currentRow + direction * 2;
+                Position doubleStepForwardPos = new Position(doubleStepForward, currentCol);
+
+                // is it on the starting row? Are the next 2 fields empty?
+                if (startingRow == currentRow && board.getPieceAt(doubleStepForwardPos) == null && board.getPieceAt(newPos) == null) {
+                    validMoves.add(new Position(doubleStepForward, currentCol));
+                }
             }
         }
 
-        // TODO diagonal captures
+        // diagonal capture
+        int[][] whiteCaptureDirections = {
+                {-1, 1},  // Up-Right
+                {-1, -1}  // Up-Left
+        };
+        int[][] blackCaptureDirections = {
+                {1, 1},   // Down-Right
+                {1, -1},  // Down-Left
+        };
 
+        int[][] currentCaptureDirections;
+        if (currentColor == Color.WHITE) {
+            currentCaptureDirections = whiteCaptureDirections;
+        } else {
+            currentCaptureDirections = blackCaptureDirections;
+        }
+
+        for (int[] move : currentCaptureDirections) {
+            int newCaptureRow = currentPos.row() + move[0];
+            int newCaptureCol = currentPos.col() + move[1];
+
+            Position targetPos = new Position(newCaptureRow, newCaptureCol);
+
+            if (isOnTheBoard(newCaptureRow, newCaptureCol)) {
+                Piece targetPiece = board.getPieceAt(targetPos);
+
+                if (targetPiece != null && targetPiece.getColor() != currentColor) {
+                    validMoves.add(targetPos); // valid capture
+                }
+            }
+        }
         return validMoves;
     }
 
-    // Check if it's on the board
+    // check if it's on the board
     public boolean isOnTheBoard(int newRow, int newCol) {
         return newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7;
     }
-
 }
