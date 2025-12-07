@@ -6,7 +6,7 @@ import model.coreData.Position;
 import model.strategies.*;
 
 public class Board {
-    private Piece[][] grid;
+    private final Piece[][] grid;
 
     public Board() {
         this.grid = new Piece[8][8];
@@ -52,14 +52,16 @@ public class Board {
         return target; // return captured piece so GameState (later) can save it in the Move record
     } // move execution method
 
-    public void undoMove(Position from , Position to , Piece capturedPiece , boolean originalHasMoved) {
+    public void undoMove(Position from , Position to , Piece capturedPiece , boolean wasFirstMove) {
         Piece piece = getPieceAt(to); // our piece is currently at the "to" position , we want to get it back to from
         setPieceAt(from, piece); // return it to "from" spot
 
         if (piece != null) {
             piece.internal_setPosition(from);
-            piece.internal_setHasMoved(originalHasMoved); // restore the pieces hasMoved state (e.g. if it hasn't moved before the move we are undoing right now set it back to false if it was false before
-        } // originalHasMoved is going to be handled in GameState as well , and will be stored in a Move object (Move's isFirstMove variable)
+            // logic: If 'wasFirstMove' is true, we want 'hasMoved' to be false (virgin state).
+            // If 'wasFirstMove' is false (it had moved before), we want 'hasMoved' to remain true.
+            piece.internal_setHasMoved(!wasFirstMove);
+        } // wasFirstMove is going to be handled in GameState as well , and will be stored in a Move object (Move's isFirstMove variable)
 
         setPieceAt(to, capturedPiece);
         if (capturedPiece != null) {
@@ -184,5 +186,9 @@ public class Board {
 
 
     }
+
+    //FEN String management
+    //TODO method to translate current board layout to a FEN string ( for Stockfish in the future )
+    public String toFEN(Color currentTurn, Position enPassantTarget, int halfMoveClock, int fullMoveNumber) {return "";}
 }
 
