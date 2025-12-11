@@ -2,6 +2,7 @@ package model;
 
 import model.coreData.Color;
 import model.coreData.Move;
+import model.coreData.PieceType;
 import model.coreData.Position;
 
 import java.util.List;
@@ -94,6 +95,20 @@ public class GameState {
     }
 
     // --- Helper Methods ---
+
+    private Position findKing(Color currentColor){
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Position currentPos = new Position(row, col);
+                Piece currentPiece = board.getPieceAt(currentPos);
+                // is in currentPiece a Piece? is currentPiece a King with the right Color?
+                if (currentPiece != null && currentPiece.getType() == PieceType.KING && currentPiece.getColor() == currentColor){
+                    return currentPos;
+                }
+            }
+        }
+        return null;
+    }
 
     private void switchTurn() {
         currentTurn = (currentTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;

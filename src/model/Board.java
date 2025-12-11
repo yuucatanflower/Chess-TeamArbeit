@@ -187,6 +187,30 @@ public class Board {
 
     }
 
+    public Board copy(){
+        Board newBoard = new Board();
+
+        // clear the initialized board
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                newBoard.grid[row][col] = null;
+            }
+        }
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Piece currentPiece = this.grid[row][col];
+
+                // only copy if there is a piece
+                if (currentPiece != null) {
+                    newBoard.grid[row][col] = currentPiece.copy();
+                }
+            }
+        }
+
+        return newBoard;
+    }
+
     //FEN String management
     //TODO method to translate current board layout to a FEN string ( for Stockfish in the future )
     public String toFEN(Color currentTurn, Position enPassantTarget, int halfMoveClock, int fullMoveNumber) {return "";}

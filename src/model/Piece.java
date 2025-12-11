@@ -60,6 +60,13 @@ public class Piece {
         this.position = position;
     } // needed for board undoMove (hope it makes sense)
 
+    public Piece copy(){
+        Piece newPiece = new Piece(this.position, this.color, this.type, this.moveStrategy);
+        newPiece.internal_setHasMoved(this.hasMoved);
+
+        return newPiece;
+    }
+
     @Override
     public String toString() {
         return "Piece: " + this.type.toString() + ", Color: " + this.color.toString() + ", Position: " + this.position.toAlgebraicNotation();
