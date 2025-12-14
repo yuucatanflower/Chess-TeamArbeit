@@ -93,7 +93,6 @@ public class GameState {
         switchTurn();
         statusMessage = "Undo successful! " + currentTurn + " to move.";
     }
-
     // --- Helper Methods ---
 
     private Position findKing(Color currentColor){
