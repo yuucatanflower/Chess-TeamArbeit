@@ -115,4 +115,28 @@ public class GameState {
         statusMessage = currentTurn + " to move";
     }
 
+    private boolean IsInCheck(Color color) {
+
+        Position kingPos = findKing(color);
+        if (kingPos == null) {
+            throw new IllegalStateException("King not found");
+        }
+
+        Color opponent = (color == Color.WHITE) ? Color.BLACK : Color.WHITE;
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Position pos = new Position(row, col);
+                Piece piece = board.getPieceAt(pos);
+
+                if (piece != null && piece.getColor() == opponent) {
+                    List<Position> moves = piece.getValidMoves(board);
+                    if (moves.contains(kingPos)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 }
