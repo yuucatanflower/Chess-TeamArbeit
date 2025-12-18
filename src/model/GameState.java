@@ -128,7 +128,6 @@ public class GameState {
         switchTurn();
         statusMessage = "Undo successful! " + currentTurn + " to move.";
     }
-
     // --- Helper Methods ---
 
     private Position findKing(Color currentColor) {
@@ -174,5 +173,65 @@ public class GameState {
         }
         return false;
     }
+    private void updateGameStatus() {
+
+        boolean inCheck = IsInCheck(currentTurn);
+        boolean hasLegalMove = false;
+
+        // Loop through all pieces of the current player
+        for (int row = 0; row < 8 && !hasLegalMove; row++) {
+            for (int col = 0; col < 8 && !hasLegalMove; col++) {
+
+                Position from = new Position(row, col);
+                Piece piece = board.getPieceAt(from);
+
+                if (piece == null || piece.getColor() != currentTurn) {
+                    continue;
+                }
+
+                // Get all pseudo-legal moves for this piece
+                List<Position> moves = piece.getValidMoves(board);
+
+                for (Position to : moves) {
+
+                    Piece captured = board.getPieceAt(to);
+                    boolean wasFirstMove = !piece.hasMoved();
+
+                    // Simulate move
+                    board.executeMove(from, to);
+
+                    // Check if king is safe after this move
+                    boolean stillInCheck = IsInCheck(currentTurn);
+
+                    // Undo move
+                    board.undoMove(from, to, captured, wasFirstMove);
+
+                    // If there exists at least one move that removes check
+                    if (!stillInCheck) {
+                        hasLegalMove = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Determine game state
+        if (inCheck && !hasLegalMove) {
+            isGameOver = true;
+            statusMessage = "Checkmate! " +
+                    (currentTurn == Color.WHITE ? "Black" : "White") + " wins!";
+        }
+        else if (!inCheck && !hasLegalMove) {
+            isGameOver = true;
+            statusMessage = "Stalemate! Draw.";
+        }
+        else if (inCheck) {
+            statusMessage = currentTurn + " is in check!";
+        }
+        else {
+            statusMessage = currentTurn + " to move";
+        }
+    }
+
 
 }
