@@ -118,6 +118,7 @@ public class GameState {
             board.setPieceAt(lastMove.to(), lastMove.movedPiece());
         }
 
+
         board.undoMove(
                 lastMove.from(),
                 lastMove.to(),
