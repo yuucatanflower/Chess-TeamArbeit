@@ -60,7 +60,7 @@ public class Piece {
         this.position = position;
     } // needed for board undoMove (hope it makes sense)
 
-    public Piece copy(){
+    public Piece copyPiece(){
         Piece newPiece = new Piece(this.position, this.color, this.type, this.moveStrategy);
         newPiece.internal_setHasMoved(this.hasMoved);
 

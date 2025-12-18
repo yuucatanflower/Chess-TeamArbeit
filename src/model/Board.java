@@ -203,7 +203,7 @@ public class Board {
 
                 // only copy if there is a piece
                 if (currentPiece != null) {
-                    newBoard.grid[row][col] = currentPiece.copy();
+                    newBoard.grid[row][col] = currentPiece.copyPiece();
                 }
             }
         }

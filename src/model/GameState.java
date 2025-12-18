@@ -4,6 +4,7 @@ import model.coreData.Color;
 import model.coreData.Move;
 import model.coreData.PieceType;
 import model.coreData.Position;
+import model.strategies.QueenMoveStrategy;
 
 import java.util.List;
 import java.util.Stack;
@@ -29,10 +30,21 @@ public class GameState {
     }
 
     // --- Getters ---
-    public Board getBoard() { return board; }
-    public Color getCurrentTurn() { return currentTurn; }
-    public String getStatusMessage() { return statusMessage; }
-    public boolean isGameOver() { return isGameOver; }
+    public Board getBoard() {
+        return board;
+    }
+
+    public Color getCurrentTurn() {
+        return currentTurn;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public boolean isGameOver() {
+        return isGameOver;
+    }
 
     // --- Gameplay Methods ---
 
@@ -68,6 +80,17 @@ public class GameState {
 
         board.executeMove(from, to);
 
+        if (piece.getType() == PieceType.PAWN) {
+            boolean whitePromote = (piece.getColor() == Color.WHITE && to.row() == 0); // last row for white
+            boolean blackPromote = (piece.getColor() == Color.BLACK && to.row() == 7); // last row for black
+
+            if (whitePromote || blackPromote) {
+                System.out.println("Promoting Pawn to Queen!");
+                Piece queen = new Piece(to, piece.getColor(), PieceType.QUEEN, new QueenMoveStrategy());
+                board.setPieceAt(to, queen);
+            }
+        }
+
         Move moveRecord = new Move(piece, from, to, target, isFirstMove);
         moveHistory.push(moveRecord);
 
@@ -82,7 +105,19 @@ public class GameState {
             return;
         }
 
-        Move lastMove = moveHistory.pop(); // gets last move
+        Move lastMove = moveHistory.pop();// gets last move
+
+        //check if promotion happened
+        Piece currentPiece = board.getPieceAt(lastMove.to());
+        if (lastMove.movedPiece().getType() == PieceType.PAWN &&
+                currentPiece != null &&
+                currentPiece.getType() != PieceType.PAWN) {
+
+            // we put the original Pawn back on the board manually
+            // so board.undoMove() finds the right piece to move back.
+            board.setPieceAt(lastMove.to(), lastMove.movedPiece());
+        }
+
         board.undoMove(
                 lastMove.from(),
                 lastMove.to(),
@@ -96,13 +131,13 @@ public class GameState {
 
     // --- Helper Methods ---
 
-    private Position findKing(Color currentColor){
+    private Position findKing(Color currentColor) {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 Position currentPos = new Position(row, col);
                 Piece currentPiece = board.getPieceAt(currentPos);
                 // is in currentPiece a Piece? is currentPiece a King with the right Color?
-                if (currentPiece != null && currentPiece.getType() == PieceType.KING && currentPiece.getColor() == currentColor){
+                if (currentPiece != null && currentPiece.getType() == PieceType.KING && currentPiece.getColor() == currentColor) {
                     return currentPos;
                 }
             }
