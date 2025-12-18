@@ -58,6 +58,30 @@ public class GameState {
 
         Piece piece = board.getPieceAt(from);
 
+        // --- CASTLING HANDLING ---
+        if (piece != null && piece.getType() == PieceType.KING) {
+
+            int row = (currentTurn == Color.WHITE) ? 7 : 0;
+
+            // Kingside castling (e1 -> g1 or e8 -> g8)
+            if (from.equals(new Position(row, 4)) && to.equals(new Position(row, 6)) && canCastle(currentTurn, true)) {
+
+                executeCastling(currentTurn, true);
+                switchTurn();
+                updateGameStatus();
+                return true;
+            }
+
+            // Queenside castling (e1 -> c1 or e8 -> c8)
+            if (from.equals(new Position(row, 4)) && to.equals(new Position(row, 2)) && canCastle(currentTurn, false)) {
+
+                executeCastling(currentTurn, false);
+                switchTurn();
+                updateGameStatus();
+                return true;
+            }
+        }
+
         //basic validation of piece and color
         if (piece == null) {
             statusMessage = "Piece not selected!";
@@ -95,6 +119,7 @@ public class GameState {
         moveHistory.push(moveRecord);
 
         switchTurn();
+        updateGameStatus();
         return true;
     }
 
@@ -150,7 +175,7 @@ public class GameState {
         statusMessage = currentTurn + " to move";
     }
 
-    private boolean IsInCheck(Color color) {
+    private boolean isInCheck(Color color) {
 
         Position kingPos = findKing(color);
         if (kingPos == null) {
@@ -174,9 +199,10 @@ public class GameState {
         }
         return false;
     }
+
     private void updateGameStatus() {
 
-        boolean inCheck = IsInCheck(currentTurn);
+        boolean inCheck = isInCheck(currentTurn);
         boolean hasLegalMove = false;
 
         // Loop through all pieces of the current player
@@ -202,7 +228,7 @@ public class GameState {
                     board.executeMove(from, to);
 
                     // Check if king is safe after this move
-                    boolean stillInCheck = IsInCheck(currentTurn);
+                    boolean stillInCheck = isInCheck(currentTurn);
 
                     // Undo move
                     board.undoMove(from, to, captured, wasFirstMove);
@@ -221,17 +247,95 @@ public class GameState {
             isGameOver = true;
             statusMessage = "Checkmate! " +
                     (currentTurn == Color.WHITE ? "Black" : "White") + " wins!";
-        }
-        else if (!inCheck && !hasLegalMove) {
+        } else if (!inCheck && !hasLegalMove) {
             isGameOver = true;
             statusMessage = "Stalemate! Draw.";
-        }
-        else if (inCheck) {
+        } else if (inCheck) {
             statusMessage = currentTurn + " is in check!";
-        }
-        else {
+        } else {
             statusMessage = currentTurn + " to move";
         }
+    }
+
+    private boolean canCastle(Color color, boolean kingSide) {
+
+        Position kingPos = findKing(color);
+        if (kingPos == null) return false;
+
+        Piece king = board.getPieceAt(kingPos);
+        if (king.hasMoved()) return false;
+
+        int row = kingPos.row();
+
+        // Determine rook position and path squares
+        Position rookPos;
+        Position[] path;
+
+        if (kingSide) {
+            // Kingside: e1 -> g1, rook h1 -> f1
+            rookPos = new Position(row, 7);
+            path = new Position[]{
+                    new Position(row, 5),
+                    new Position(row, 6)
+            };
+        } else {
+            // Queenside: e1 -> c1, rook a1 -> d1
+            rookPos = new Position(row, 0);
+            path = new Position[]{
+                    new Position(row, 3),
+                    new Position(row, 2),
+                    new Position(row, 1)
+            };
+        }
+
+        Piece rook = board.getPieceAt(rookPos);
+        if (rook == null ||
+                rook.getType() != PieceType.ROOK ||
+                rook.hasMoved()) {
+            return false;
+        }
+
+        // Squares between king and rook must be empty
+        for (Position p : path) {
+            if (board.getPieceAt(p) != null) return false;
+        }
+
+        // King must not be in check, pass through check, or end in check
+        if (isInCheck(color)) return false;
+
+        for (int i = 0; i < 2; i++) { // only squares king passes through
+            Position step = path[i];
+
+            boolean wasFirstMove = !king.hasMoved();
+
+            board.executeMove(kingPos, step);
+            boolean inCheck = isInCheck(color);
+            board.undoMove(kingPos, step, null, wasFirstMove);
+
+            if (inCheck) return false;
+        }
+        return true;
+    }
+
+
+    private void executeCastling(Color color, boolean kingSide) {
+        int row = (color == Color.WHITE) ? 7 : 0;
+
+        Position kingFrom = new Position(row, 4);
+        Position kingTo = kingSide
+                ? new Position(row, 6)
+                : new Position(row, 2);
+
+        Position rookFrom = kingSide
+                ? new Position(row, 7)
+                : new Position(row, 0);
+
+        Position rookTo = kingSide
+                ? new Position(row, 5)
+                : new Position(row, 3);
+
+        board.executeMove(kingFrom, kingTo);
+        board.executeMove(rookFrom, rookTo);
     }
 
 
