@@ -24,9 +24,9 @@ public class Board {
         return grid[pos.row()][pos.col()];
     }
 
-    public void setPieceAt(Position pos, Piece piece) {
-        grid[pos.row()][pos.col()] = piece;
-    } // sets piece on a position using Position object
+        public void setPieceAt(Position pos, Piece piece) {
+            grid[pos.row()][pos.col()] = piece;
+        } // sets piece on a position using Position object
 
     public void setPieceAt(String algebraicNotation, Piece piece) {
        Position pos = Position.fromAlgebraicNotation(algebraicNotation);
