@@ -156,11 +156,44 @@ public class GameState {
     }
     // --- Helper Methods ---
 
-    private Position findKing(Color currentColor) {
+    private boolean isMoveLegal(Position from, Position to) {
+        if (from == null || to == null) {
+            return false;
+        }
+
+        Piece currentPiece = board.getPieceAt(from);
+
+        if (currentPiece == null) {
+            return false;
+        }
+        // ensure piece belongs to the current player
+        if (currentPiece.getColor() != currentTurn) {
+            return false;
+        }
+
+        // ensure the move is physically possible for this piece
+        List<Position> allowedMoves = currentPiece.getValidMoves(board);
+        if (!allowedMoves.contains(to)) {
+            return false;
+        }
+
+        Board simulatedBoard = board.copy();
+        Piece pieceOnSimulatedBoard = simulatedBoard.getPieceAt(from);
+
+        simulatedBoard.setPieceAt(to, pieceOnSimulatedBoard);
+        simulatedBoard.setPieceAt(from, null);
+
+        if (isInCheck(currentTurn, simulatedBoard)) {
+            return false; // king would be in danger -> illegal
+        }
+        return true;
+    }
+
+    private Position findKing(Color currentColor, Board boardToCheck) {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 Position currentPos = new Position(row, col);
-                Piece currentPiece = board.getPieceAt(currentPos);
+                Piece currentPiece = boardToCheck.getPieceAt(currentPos);
                 // is in currentPiece a Piece? is currentPiece a King with the right Color?
                 if (currentPiece != null && currentPiece.getType() == PieceType.KING && currentPiece.getColor() == currentColor) {
                     return currentPos;
@@ -170,14 +203,18 @@ public class GameState {
         return null;
     }
 
+    private Position findKing(Color currentColor) {
+        return findKing(currentColor, this.board);
+    }
+
     private void switchTurn() {
         currentTurn = (currentTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
         statusMessage = currentTurn + " to move";
     }
 
-    private boolean isInCheck(Color color) {
+    private boolean isInCheck(Color color, Board boardToCheck) {
+        Position kingPos = findKing(color, boardToCheck);
 
-        Position kingPos = findKing(color);
         if (kingPos == null) {
             throw new IllegalStateException("King not found");
         }
@@ -187,10 +224,10 @@ public class GameState {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 Position pos = new Position(row, col);
-                Piece piece = board.getPieceAt(pos);
+                Piece piece = boardToCheck.getPieceAt(pos);
 
                 if (piece != null && piece.getColor() == opponent) {
-                    List<Position> moves = piece.getValidMoves(board);
+                    List<Position> moves = piece.getValidMoves(boardToCheck);
                     if (moves.contains(kingPos)) {
                         return true;
                     }
@@ -198,6 +235,10 @@ public class GameState {
             }
         }
         return false;
+    }
+
+    private boolean isInCheck(Color color) {
+        return isInCheck(color, this.board);
     }
 
     private void updateGameStatus() {
