@@ -222,7 +222,7 @@ public class GameState {
                     // simulate move
                     board.executeMove(from, to);
 
-                    boolean kingStillInCheck = IsInCheck(color);
+                    boolean kingStillInCheck = isInCheck(color);
 
                     board.undoMove(from, to, captured, wasFirstMove);
 
@@ -237,4 +237,3 @@ public class GameState {
         // If no legal move was found, player is stuck (no legal moves)
         return true;
     }
-}
