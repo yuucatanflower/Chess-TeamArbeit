@@ -379,5 +379,43 @@ public class GameState {
         board.executeMove(rookFrom, rookTo);
     }
 
+    private boolean hasNoLegalMoves(Color color) {
 
+        // check every piece
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+
+                Position from = new Position(row, col);
+                Piece piece = board.getPieceAt(from);
+
+                if (piece == null) continue;
+
+                if (piece.getColor() != color) continue;
+
+                List<Position> moves = piece.getValidMoves(board);
+
+                // try every possible move
+                for (Position to : moves) {
+
+                    Piece captured = board.getPieceAt(to);
+                    boolean wasFirstMove = !piece.hasMoved();
+
+                    // simulate move
+                    board.executeMove(from, to);
+
+                    boolean kingStillInCheck = isInCheck(color);
+
+                    board.undoMove(from, to, captured, wasFirstMove);
+
+                    // If move keeps king safe, player has a legal move
+                    if (!kingStillInCheck) {
+                        return false; // not stuck
+                    }
+                }
+            }
+        }
+
+        // If no legal move was found, player is stuck (no legal moves)
+        return true;
+    }
 }

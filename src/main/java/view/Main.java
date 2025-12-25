@@ -41,7 +41,6 @@ public class Main extends Application{
 
     // --- Console ---
     public static void startConsoleGame() {
-
         GameState game =  new GameState();
         Scanner input = new Scanner(System.in);
 
