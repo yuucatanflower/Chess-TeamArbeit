@@ -46,6 +46,8 @@ public class GameState {
         return isGameOver;
     }
 
+    public Stack<Move> getMoveHistory() { return moveHistory; }
+
     // --- Gameplay Methods ---
 
     //attempts to play a move from point A to point B.
