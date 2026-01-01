@@ -46,6 +46,21 @@ public class Main extends Application{
 
         System.out.println("---GAME STARTED---");
         System.out.println("Type moves as 'e2-e4' or 'undo' to revert move. Type 'exit' or 'quit' to end the game. ");
+        controller.Stockfish bot = new controller.Stockfish();
+
+        if (bot.startEngine()) {
+            System.out.println("Engine started!");
+
+            // Ask for the best move from the starting position
+            String startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+            String move = bot.getBestMove(startFen, 1000); // Think for 1 second
+
+            System.out.println("Stockfish suggests: " + move);
+
+            bot.stopEngine();
+        } else {
+            System.out.println("Failed to start engine.");
+        }
 
         while(!game.isGameOver()){
             game.getBoard().printBoard();
