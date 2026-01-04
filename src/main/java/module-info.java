@@ -4,4 +4,5 @@ module Chess.TeamArbeit {
 
     opens view to javafx.fxml;
     exports view;
+
 }
