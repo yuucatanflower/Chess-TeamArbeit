@@ -1,5 +1,6 @@
 package view;
 
+import controller.Stockfish;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,7 +50,7 @@ public class Main extends Application {
 
         System.out.println("---GAME STARTED---");
         System.out.println("Type moves as 'e2-e4' or 'undo' to revert move. Type 'exit' or 'quit' to end the game. ");
-        controller.Stockfish bot = new controller.Stockfish();
+        Stockfish bot = new Stockfish();
 
         if (bot.startEngine()) {
             System.out.println("Engine started!");
@@ -307,6 +308,17 @@ public class Main extends Application {
             if (success) {
                 System.out.println("Move successful!");
                 selectedPosition = null; // Reset selection after move
+
+                // 1. Update the board immediately so the user sees the final move
+                updateBoard(boardGui);
+
+                // 2. Check if the game is over
+                if (game.isGameOver()) {
+                    showGameOverDialog(); // Shows the popup
+                    return; // Stop execution here
+                }
+
+                return; // Return here to avoid double-updating at the bottom
             } else {
                 System.out.println("Invalid move or selection switch");
 
@@ -323,6 +335,20 @@ public class Main extends Application {
             // Redraw board to reflect new positions or cleared selection
             updateBoard(boardGui);
         }
+    }
+
+    private void showGameOverDialog() {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setTitle("Game Over");
+        alert.setHeaderText(null);
+        alert.setContentText(game.getStatusMessage());
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == javafx.scene.control.ButtonType.OK) {
+                showMenuScene(); // Return to menu
+                this.game = null; // Reset game
+            }
+        });
     }
 
     private void updateBoard(GridPane boardGui) {
