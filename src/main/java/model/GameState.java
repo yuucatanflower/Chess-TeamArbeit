@@ -27,7 +27,17 @@ public class GameState {
         this.moveHistory = new Stack<>();
         this.isGameOver = false;
         this.statusMessage = "WHITE to move";
+
+        // timer initialization (10 minutes per player)
+        this.whiteTimeMs = 10 * 60 * 1000;
+        this.blackTimeMs = 10 * 60 * 1000;
+        this.lastMoveTimestamp = System.currentTimeMillis();
     }
+
+    // --- Timer ---
+    private long whiteTimeMs;
+    private long blackTimeMs;
+    private long lastMoveTimestamp;
 
     // --- Getters ---
     public Board getBoard() {
@@ -47,6 +57,10 @@ public class GameState {
     }
 
     public Stack<Move> getMoveHistory() { return moveHistory; }
+
+    public long getWhiteTimeMs() { return whiteTimeMs; }
+
+    public long getBlackTimeMs() { return blackTimeMs; }
 
     // --- Gameplay Methods ---
 
@@ -119,6 +133,9 @@ public class GameState {
 
         Move moveRecord = new Move(piece, from, to, target, isFirstMove);
         moveHistory.push(moveRecord);
+
+        updateTimer();
+        if (isGameOver) { return true; }
 
         switchTurn();
         updateGameStatus();
@@ -213,6 +230,28 @@ public class GameState {
         currentTurn = (currentTurn == Color.WHITE) ? Color.BLACK : Color.WHITE;
         statusMessage = currentTurn + " to move";
     }
+
+    private void updateTimer() {
+        long now = System.currentTimeMillis();
+        long elapsed = now - lastMoveTimestamp;
+
+        if (currentTurn == Color.WHITE) {
+            whiteTimeMs -= elapsed;
+            if (whiteTimeMs <= 0) {
+                isGameOver = true;
+                statusMessage = "Black wins on time!";
+            }
+        } else {
+            blackTimeMs -= elapsed;
+            if (blackTimeMs <= 0) {
+                isGameOver = true;
+                statusMessage = "White wins on time!";
+            }
+        }
+
+        lastMoveTimestamp = now;
+    }
+
 
     private boolean isInCheck(Color color, Board boardToCheck) {
         Position kingPos = findKing(color, boardToCheck);
