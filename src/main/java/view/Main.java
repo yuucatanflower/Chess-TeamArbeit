@@ -1,5 +1,6 @@
 package view;
 
+import controller.Stockfish;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -7,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -16,8 +18,10 @@ import model.coreData.Position;
 
 import java.util.Scanner;
 
-public class Main extends Application{
+public class Main extends Application {
     private Stage window; // Reference to the main window for switching of the scenes
+    private GameState game;
+    private Position selectedPosition = null;
 
     public static void main(String[] args) {
 
@@ -41,12 +45,12 @@ public class Main extends Application{
 
     // --- Console ---
     public static void startConsoleGame() {
-        GameState game =  new GameState();
+        GameState game = new GameState();
         Scanner input = new Scanner(System.in);
 
         System.out.println("---GAME STARTED---");
         System.out.println("Type moves as 'e2-e4' or 'undo' to revert move. Type 'exit' or 'quit' to end the game. ");
-        controller.Stockfish bot = new controller.Stockfish();
+        Stockfish bot = new Stockfish();
 
         if (bot.startEngine()) {
             System.out.println("Engine started!");
@@ -62,39 +66,39 @@ public class Main extends Application{
             System.out.println("Failed to start engine.");
         }
 
-        while(!game.isGameOver()){
+        while (!game.isGameOver()) {
             game.getBoard().printBoard();
-            System.out.println("STATUS: "+ game.getStatusMessage());
+            System.out.println("STATUS: " + game.getStatusMessage());
             System.out.print("> "); // prompt move or undo
 
             String command = input.nextLine().trim();
 
             //input processing
-            if(command.equalsIgnoreCase("exit") || command.equalsIgnoreCase("quit")) {
+            if (command.equalsIgnoreCase("exit") || command.equalsIgnoreCase("quit")) {
                 break;
             }
-            if(command.equalsIgnoreCase("undo")) {
+            if (command.equalsIgnoreCase("undo")) {
                 game.undo();
                 continue;
             }
 
             // move parsing ( expects 'e2-e4' type format )
-            if(isValidInputFormat(command)) {
-                try{
+            if (isValidInputFormat(command)) {
+                try {
                     String[] commandParts = command.split("-"); // splits the command on '-' into two elements and puts them in an array
                     Position from = Position.fromAlgebraicNotation(commandParts[0]); // for 'e2-e4' that would be e2
                     Position to = Position.fromAlgebraicNotation(commandParts[1]); // and e4
 
                     boolean success = game.playTurn(from, to);
-                    if(success) {
+                    if (success) {
                         System.out.println("Move from " + from.toAlgebraicNotation() + " to " + to.toAlgebraicNotation());
-                    }else{
+                    } else {
                         System.out.println("Move failed!");
                     }
-                }catch(Exception e){
+                } catch (Exception e) {
                     System.out.println("Error parsing move: Use 'e2-e4' format."); //if format is wrong
                 }
-            }else{
+            } else {
                 System.out.println("Unknown command! Type moves as 'e2-e4' or 'undo' to revert move.");//if command is not available
             }
         }
@@ -162,7 +166,7 @@ public class Main extends Application{
         // Bot Placeholder
         HBox bots = new HBox(20);
         bots.setAlignment(Pos.CENTER);
-        for(int i=1; i<=4; i++) {
+        for (int i = 1; i <= 4; i++) {
             VBox botBox = new VBox(5);
             Rectangle imgPlaceholder = new Rectangle(80, 80, Color.GRAY);
             Label name = new Label("BOT " + i);
@@ -175,7 +179,7 @@ public class Main extends Application{
         HBox timeControls = new HBox(20);
         timeControls.setAlignment(Pos.CENTER);
         String[] times = {"5m", "10m", "20m"};
-        for(String t : times) {
+        for (String t : times) {
             Button tBtn = new Button(t);
             tBtn.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
             timeControls.getChildren().add(tBtn);
@@ -193,22 +197,35 @@ public class Main extends Application{
 
     // SCREEN 3: GAME BOARD
     private void showBoardScene() {
+        if (this.game == null) {
+            this.game = new GameState();
+        }
+
         BorderPane layout = new BorderPane();
         layout.setStyle("-fx-background-color: #2c3e50;");
 
-        // Chessboard
+        // --- KEY CONCEPT: STACKPANE FOR LAYERING ---
+        StackPane gameStack = new StackPane();
+
+        // LAYER 1: VISUALS (Bottom)
+        // Only renders images. Mouse events are disabled here.
         GridPane boardGui = new GridPane();
         boardGui.setAlignment(Pos.CENTER);
-        int tileSize = 60;
+        boardGui.setMouseTransparent(true); // CRITICAL: Makes all images "ghosts" to the mouse.
 
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                Rectangle rect = new Rectangle(tileSize, tileSize);
-                rect.setFill((row + col) % 2 == 0 ? Color.web("#EBECD0") : Color.web("#779556"));
-                boardGui.add(new StackPane(rect), col, row);
-            }
-        }
-        layout.setCenter(boardGui);
+        // LAYER 2: INPUT (Top)
+        // An invisible grid that captures clicks.
+        GridPane inputGrid = new GridPane();
+        inputGrid.setAlignment(Pos.CENTER);
+        setupInputLayer(inputGrid, boardGui); // Helper method to build the invisible grid
+
+        // Stack them: Input goes ON TOP of Visuals
+        gameStack.getChildren().addAll(boardGui, inputGrid);
+
+        // Initial render of the board visuals
+        updateBoard(boardGui);
+
+        layout.setCenter(gameStack);
 
         // --- Right: MOVE HISTORY & BANNER ---
         VBox sidebar = new VBox(10);
@@ -239,4 +256,146 @@ public class Main extends Application{
 
         window.setScene(new Scene(layout, 900, 700));
     }
+
+    // Builds the invisible grid for click detection
+    private void setupInputLayer(GridPane inputGrid, GridPane boardGui) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                // Create an invisible rectangle as the "click target"
+                Rectangle clickArea = new Rectangle(60, 60, Color.TRANSPARENT);
+
+                final int r = row;
+                final int c = col;
+
+                // The click triggers the logic and then updates the visual layer (boardGui)
+                clickArea.setOnMouseClicked(e -> handleTileClick(r, c, boardGui));
+
+                inputGrid.add(clickArea, col, row);
+            }
+        }
+    }
+
+    private void handleTileClick(int row, int col, GridPane boardGui) {
+        // Since your Board logic (Row 0 = Black/Top) matches JavaFX (Row 0 = Top),
+        // we use the coordinates directly without flipping.
+        Position clickedPos = new Position(row, col);
+
+        System.out.println("Clicked: " + clickedPos.toAlgebraicNotation()); // Debugging
+
+        // CASE 1: Select a piece (First Click)
+        if (selectedPosition == null) {
+            model.Piece piece = game.getBoard().getPieceAt(clickedPos);
+
+            // Only allow selecting pieces that belong to the current turn's player
+            if (piece != null && piece.getColor() == game.getCurrentTurn()) {
+                selectedPosition = clickedPos;
+                System.out.println("Selected: " + clickedPos.toAlgebraicNotation());
+                updateBoard(boardGui); // Redraw to show highlight
+            }
+        }
+        // CASE 2: Move or Change Selection (Second Click)
+        else {
+            // If clicking the same tile again -> Deselect
+            if (clickedPos.equals(selectedPosition)) {
+                selectedPosition = null;
+                updateBoard(boardGui);
+                return;
+            }
+
+            // Try to execute the move in the game logic
+            boolean success = game.playTurn(selectedPosition, clickedPos);
+
+            if (success) {
+                System.out.println("Move successful!");
+                selectedPosition = null; // Reset selection after move
+
+                // 1. Update the board immediately so the user sees the final move
+                updateBoard(boardGui);
+
+                // 2. Check if the game is over
+                if (game.isGameOver()) {
+                    showGameOverDialog(); // Shows the popup
+                    return; // Stop execution here
+                }
+
+                return; // Return here to avoid double-updating at the bottom
+            } else {
+                System.out.println("Invalid move or selection switch");
+
+                // UX Feature: If the move failed but the user clicked on another OWN piece,
+                // switch selection to that new piece instead of just deselecting everything.
+                model.Piece clickedPiece = game.getBoard().getPieceAt(clickedPos);
+                if (clickedPiece != null && clickedPiece.getColor() == game.getCurrentTurn()) {
+                    selectedPosition = clickedPos; // Switch selection
+                    System.out.println("Switched selection to: " + clickedPos.toAlgebraicNotation());
+                } else {
+                    selectedPosition = null; // Clicked empty space or enemy -> Deselect all
+                }
+            }
+            // Redraw board to reflect new positions or cleared selection
+            updateBoard(boardGui);
+        }
+    }
+
+    private void showGameOverDialog() {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setTitle("Game Over");
+        alert.setHeaderText(null);
+        alert.setContentText(game.getStatusMessage());
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == javafx.scene.control.ButtonType.OK) {
+                showMenuScene(); // Return to menu
+                this.game = null; // Reset game
+            }
+        });
+    }
+
+    private void updateBoard(GridPane boardGui) {
+        boardGui.getChildren().clear(); // Clear old visuals
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                StackPane tile = new StackPane();
+
+                // Set size for visual consistency
+                tile.setPrefSize(60, 60);
+
+                boolean isLight = (row + col) % 2 == 0;
+
+                // 1. Background Image
+                ImageView backgroundSprite = ImageLoader.getBoardTile(isLight);
+                backgroundSprite.setFitWidth(60);
+                backgroundSprite.setFitHeight(60);
+                tile.getChildren().add(backgroundSprite);
+
+                // 2. Selection Highlight (Visual)
+                Position currentPos = new Position(row, col);
+                if (selectedPosition != null && selectedPosition.equals(currentPos)) {
+                    Rectangle highlight = new Rectangle(60, 60, Color.rgb(0, 255, 0, 0.4));
+                    tile.getChildren().add(highlight);
+                }
+
+                // 3. Piece Rendering
+                model.Piece piece = game.getBoard().getPieceAt(currentPos);
+                if (piece != null) {
+                    ImageView pieceSprite = ImageLoader.getPieceSprite(piece.getType(), piece.getColor());
+
+                    // Exclude from layout calculations so the tile size remains fixed
+                    pieceSprite.setManaged(false);
+
+                    // Manual Positioning:
+                    // Tile Height (60) - Sprite Height (~150) = -90.
+                    // Added offset (-10) for visual centering -> -100.
+                    pieceSprite.setLayoutX(0);
+                    pieceSprite.setLayoutY(-100);
+
+                    tile.getChildren().add(pieceSprite);
+                }
+
+                boardGui.add(tile, col, row);
+            }
+        }
+    }
+
 }
