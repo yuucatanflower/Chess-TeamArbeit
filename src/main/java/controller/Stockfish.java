@@ -49,7 +49,7 @@ public class Stockfish {
         // Tell Stockfish to calculate enough lines
         // We need at least 'rank' lines to find the N-th best move
         sendCommand("setoption name MultiPV value " + rank);
-
+//
         sendCommand("position fen " + fen);
         sendCommand("go movetime " + waitTimeMs);
 
