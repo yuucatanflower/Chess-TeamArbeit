@@ -16,12 +16,25 @@ import javafx.stage.Stage;
 import model.GameState;
 import model.coreData.Position;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
+
 import java.util.Scanner;
 
 public class Main extends Application {
+public class Main extends Application {
+    private GameState game;
+    private Label whiteTimeLabel;
+    private Label blackTimeLabel;
+    private TextArea historyArea;
     private Stage window; // Reference to the main window for switching of the scenes
     private GameState game;
     private Position selectedPosition = null;
+    private long selectedTimeMs = 1 * 60 * 1000;
+
+    private Timeline timeline;
 
     public static void main(String[] args) {
 
@@ -45,6 +58,7 @@ public class Main extends Application {
 
     // --- Console ---
     public static void startConsoleGame() {
+        GameState game =  new GameState(5 * 60 * 1000);
         GameState game = new GameState();
         Scanner input = new Scanner(System.in);
 
@@ -184,6 +198,19 @@ public class Main extends Application {
             tBtn.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
             timeControls.getChildren().add(tBtn);
         }
+        Button btn1 = new Button("1m");
+        Button btn5 = new Button("5m");
+        Button btn10 = new Button("10m");
+
+        btn1.setOnAction(e -> selectedTimeMs = 1 * 60 * 1000);
+        btn5.setOnAction(e -> selectedTimeMs = 5 * 60 * 1000);
+        btn10.setOnAction(e -> selectedTimeMs = 10 * 60 * 1000);
+
+        btn1.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        btn5.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        btn10.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+
+        timeControls.getChildren().addAll(btn1, btn5, btn10);
 
         Button startBtn = new Button("START");
         startBtn.setPrefSize(120, 40);
@@ -200,6 +227,8 @@ public class Main extends Application {
         if (this.game == null) {
             this.game = new GameState();
         }
+
+        game = new GameState(selectedTimeMs);
 
         BorderPane layout = new BorderPane();
         layout.setStyle("-fx-background-color: #2c3e50;");
@@ -227,7 +256,12 @@ public class Main extends Application {
 
         layout.setCenter(gameStack);
 
-        // --- Right: MOVE HISTORY & BANNER ---
+        // --- HISTORY ---
+
+        historyArea = new TextArea();
+        historyArea.setEditable(false);
+        historyArea.setPrefHeight(400);
+
         VBox sidebar = new VBox(10);
         sidebar.setPadding(new Insets(10));
         sidebar.setStyle("-fx-background-color: #34495e;");
@@ -236,25 +270,75 @@ public class Main extends Application {
         Label historyLabel = new Label("Move Order");
         historyLabel.setTextFill(Color.WHITE);
 
-        TextArea dummyHistory = new TextArea("1. e4 d5\n2. exd5 Qxd5"); // Placeholder
-        dummyHistory.setEditable(false);
-        dummyHistory.setPrefHeight(400);
-
-        sidebar.getChildren().addAll(historyLabel, dummyHistory);
+        sidebar.getChildren().addAll(historyLabel, historyArea);
         layout.setRight(sidebar);
 
-        // --- Up: TIMER ---
+
+        // --- TIMER ---
         HBox topBar = new HBox(100);
         topBar.setAlignment(Pos.CENTER);
         topBar.setPadding(new Insets(10));
-        Label timerW = new Label("White: 05:00");
-        Label timerB = new Label("Black: 05:00");
-        timerW.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-        timerB.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-        topBar.getChildren().addAll(timerB, timerW);
+
+        whiteTimeLabel = new Label();
+        blackTimeLabel = new Label();
+
+        whiteTimeLabel.setText("White: " + formatTime(game.getWhiteTimeMs()));
+        blackTimeLabel.setText("Black: " + formatTime(game.getBlackTimeMs()));
+
+        whiteTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+        blackTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+
+        topBar.getChildren().addAll(blackTimeLabel, whiteTimeLabel);
         layout.setTop(topBar);
 
         window.setScene(new Scene(layout, 900, 700));
+
+        // --- TIMELINE ---
+        timeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), e -> {
+
+                    game.tickTimer();   // ⏱️ Zeit läuft wirklich
+
+                    whiteTimeLabel.setText(
+                            "White: " + formatTime(game.getWhiteTimeMs())
+                    );
+                    blackTimeLabel.setText(
+                            "Black: " + formatTime(game.getBlackTimeMs())
+                    );
+
+                    if (game.isGameOver()) {
+                        timeline.stop();
+                    }
+                })
+        );
+
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
+    }
+
+    private String formatTime(long ms) {
+        long totalSeconds = ms / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    private void updateHistory() {
+        StringBuilder sb = new StringBuilder();
+        int moveNumber = 1;
+
+        for (model.coreData.Move move : game.getMoveHistory()) {
+            if (move.movedPiece().getColor() == model.coreData.Color.WHITE) {
+                sb.append(moveNumber++).append(". ");
+            }
+
+            sb.append(move.from().toAlgebraicNotation())
+                    .append("-")
+                    .append(move.to().toAlgebraicNotation())
+                    .append(" ");
+        }
+
+        historyArea.setText(sb.toString());
     }
 
     // Builds the invisible grid for click detection
