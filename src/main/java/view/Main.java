@@ -24,15 +24,13 @@ import javafx.util.Duration;
 import java.util.Scanner;
 
 public class Main extends Application {
-public class Main extends Application {
     private GameState game;
     private Label whiteTimeLabel;
     private Label blackTimeLabel;
     private TextArea historyArea;
     private Stage window; // Reference to the main window for switching of the scenes
-    private GameState game;
     private Position selectedPosition = null;
-    private long selectedTimeMs = 1 * 60 * 1000;
+    private long selectedTimeMs = 60 * 1000;
 
     private Timeline timeline;
 
@@ -59,7 +57,6 @@ public class Main extends Application {
     // --- Console ---
     public static void startConsoleGame() {
         GameState game =  new GameState(5 * 60 * 1000);
-        GameState game = new GameState();
         Scanner input = new Scanner(System.in);
 
         System.out.println("---GAME STARTED---");
@@ -192,17 +189,12 @@ public class Main extends Application {
         // Time Setting
         HBox timeControls = new HBox(20);
         timeControls.setAlignment(Pos.CENTER);
-        String[] times = {"5m", "10m", "20m"};
-        for (String t : times) {
-            Button tBtn = new Button(t);
-            tBtn.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-            timeControls.getChildren().add(tBtn);
-        }
+
         Button btn1 = new Button("1m");
         Button btn5 = new Button("5m");
         Button btn10 = new Button("10m");
 
-        btn1.setOnAction(e -> selectedTimeMs = 1 * 60 * 1000);
+        btn1.setOnAction(e -> selectedTimeMs = 60 * 1000);
         btn5.setOnAction(e -> selectedTimeMs = 5 * 60 * 1000);
         btn10.setOnAction(e -> selectedTimeMs = 10 * 60 * 1000);
 
@@ -224,9 +216,7 @@ public class Main extends Application {
 
     // SCREEN 3: GAME BOARD
     private void showBoardScene() {
-        if (this.game == null) {
-            this.game = new GameState();
-        }
+            this.game = new GameState(5 * 60 * 1000);
 
         game = new GameState(selectedTimeMs);
 
@@ -335,7 +325,7 @@ public class Main extends Application {
             sb.append(move.from().toAlgebraicNotation())
                     .append("-")
                     .append(move.to().toAlgebraicNotation())
-                    .append(" ");
+                    .append("\n");
         }
 
         historyArea.setText(sb.toString());
@@ -395,6 +385,8 @@ public class Main extends Application {
 
                 // 1. Update the board immediately so the user sees the final move
                 updateBoard(boardGui);
+
+                updateHistory();
 
                 // 2. Check if the game is over
                 if (game.isGameOver()) {
@@ -481,5 +473,4 @@ public class Main extends Application {
             }
         }
     }
-
 }
