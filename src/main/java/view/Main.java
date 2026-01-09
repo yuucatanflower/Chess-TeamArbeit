@@ -31,6 +31,7 @@ public class Main extends Application {
     private Stage window; // Reference to the main window for switching of the scenes
     private Position selectedPosition = null;
     private long selectedTimeMs = 60 * 1000;
+    private model.coreData.Color selectedColor = model.coreData.Color.WHITE;
 
     private Timeline timeline;
 
@@ -56,7 +57,8 @@ public class Main extends Application {
 
     // --- Console ---
     public static void startConsoleGame() {
-        GameState game =  new GameState(5 * 60 * 1000);
+        GameState game = new GameState(5 * 60 * 1000, model.coreData.Color.WHITE);
+
         Scanner input = new Scanner(System.in);
 
         System.out.println("---GAME STARTED---");
@@ -174,6 +176,8 @@ public class Main extends Application {
         Label title = new Label("Bot Selection + Time Control");
         title.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
 
+        layout.getChildren().add(chooseColor());
+
         // Bot Placeholder
         HBox bots = new HBox(20);
         bots.setAlignment(Pos.CENTER);
@@ -214,11 +218,37 @@ public class Main extends Application {
         window.setScene(new Scene(layout, 800, 600));
     }
 
+    private HBox chooseColor() {
+
+        HBox colorControl = new HBox(30);
+        colorControl.setAlignment(Pos.CENTER);
+
+        Button btnW = new Button("White");
+        Button btnB = new Button("Black");
+
+        btnW.setStyle("-fx-background-color: #ecf0f1;");
+        btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+
+        btnW.setOnAction(e -> {
+            selectedColor = model.coreData.Color.WHITE;
+            btnW.setStyle("-fx-background-color: #ffffff;");
+            btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        btnB.setOnAction(e -> {
+            selectedColor = model.coreData.Color.BLACK;
+            btnB.setStyle("-fx-background-color: #ffffff;");
+            btnW.setStyle("-fx-background-color: #7f8c8d;");
+        });
+
+        colorControl.getChildren().addAll(btnW, btnB);
+        return colorControl;
+    }
+
+
     // SCREEN 3: GAME BOARD
     private void showBoardScene() {
-            this.game = new GameState(5 * 60 * 1000);
-
-        game = new GameState(selectedTimeMs);
+        game = new GameState(selectedTimeMs, selectedColor);
 
         BorderPane layout = new BorderPane();
         layout.setStyle("-fx-background-color: #2c3e50;");

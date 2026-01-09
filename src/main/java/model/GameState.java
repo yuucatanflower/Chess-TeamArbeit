@@ -19,11 +19,11 @@ public class GameState {
     private String statusMessage;
 
     // ---  Constructor ---
-    public GameState(long startTimeMs) {
+        public GameState(long startTimeMs, Color startingColor) {
         this.board = new Board();
         this.board.initializeBoard();
 
-        this.currentTurn = Color.WHITE;
+        this.currentTurn = startingColor;
         this.moveHistory = new Stack<>();
         this.isGameOver = false;
         this.statusMessage = "WHITE to move";
