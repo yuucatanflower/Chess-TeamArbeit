@@ -17,9 +17,11 @@ public class GameState {
     private final Stack<Move> moveHistory;
     private boolean isGameOver;
     private String statusMessage;
+    private long incrementMs = 0; // in milliseconds
+
 
     // ---  Constructor ---
-        public GameState(long startTimeMs, Color startingColor) {
+        public GameState(long startTimeMs, Color startingColor, long incrementMs) {
         this.board = new Board();
         this.board.initializeBoard();
 
@@ -27,8 +29,9 @@ public class GameState {
         this.moveHistory = new Stack<>();
         this.isGameOver = false;
         this.statusMessage = "WHITE to move";
+        this.incrementMs = incrementMs;
 
-        // timer initialization (10 minutes per player)
+            // timer initialization (10 minutes per player)
         this.whiteTimeMs = startTimeMs;
         this.blackTimeMs = startTimeMs;
         this.lastMoveTimestamp = System.currentTimeMillis();
@@ -70,6 +73,17 @@ public class GameState {
         if (isGameOver) {
             statusMessage = "Game Over!";
             return false;
+        }
+
+
+
+        // Apply increment for the player who just moved
+        if (currentTurn == Color.WHITE) {
+            // White just moved, add increment to WHITE
+            whiteTimeMs += incrementMs;
+        } else {
+            // Black just moved, add increment to BLACK
+            blackTimeMs += incrementMs;
         }
 
         Piece piece = board.getPieceAt(from);

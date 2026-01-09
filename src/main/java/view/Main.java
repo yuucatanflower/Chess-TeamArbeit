@@ -32,6 +32,7 @@ public class Main extends Application {
     private Position selectedPosition = null;
     private long selectedTimeMs = 60 * 1000;
     private model.coreData.Color selectedColor = model.coreData.Color.WHITE;
+    private long selectedIncrementMs = 0;
 
     private Timeline timeline;
 
@@ -57,7 +58,9 @@ public class Main extends Application {
 
     // --- Console ---
     public static void startConsoleGame() {
-        GameState game = new GameState(5 * 60 * 1000, model.coreData.Color.WHITE);
+        GameState game = new GameState(5 * 60 * 1000, model.coreData.Color.WHITE, 0);
+
+
 
         Scanner input = new Scanner(System.in);
 
@@ -216,6 +219,27 @@ public class Main extends Application {
         layout.getChildren().addAll(title, bots, new Label("Select time control:"), timeControls, startBtn);
 
         window.setScene(new Scene(layout, 800, 600));
+
+        // increments
+        HBox incrementControls = new HBox(20);
+        incrementControls.setAlignment(Pos.CENTER);
+
+        Button inc0 = new Button("+0s");
+        Button inc5 = new Button("+5s");
+        Button inc10 = new Button("+10s");
+
+        inc0.setOnAction(e -> selectedIncrementMs = 0);
+        inc5.setOnAction(e -> selectedIncrementMs = 5 * 1000);
+        inc10.setOnAction(e -> selectedIncrementMs = 10 * 1000);
+
+        inc0.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        inc5.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        inc10.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+
+        layout.getChildren().addAll(new Label("Select increment:"), incrementControls);
+
+        incrementControls.getChildren().addAll(inc0, inc5, inc10);
+
     }
 
     private HBox chooseColor() {
@@ -246,9 +270,13 @@ public class Main extends Application {
     }
 
 
+
+
+
     // SCREEN 3: GAME BOARD
     private void showBoardScene() {
-        game = new GameState(selectedTimeMs, selectedColor);
+        game = new GameState(selectedTimeMs, selectedColor, selectedIncrementMs);
+
 
         BorderPane layout = new BorderPane();
         layout.setStyle("-fx-background-color: #2c3e50;");
