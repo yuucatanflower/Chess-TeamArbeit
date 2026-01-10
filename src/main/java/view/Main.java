@@ -36,6 +36,12 @@ public class Main extends Application {
 
     private Timeline timeline;
 
+    private boolean isPaused = false;
+    private StackPane pauseOverlay;
+
+    private java.util.List<Position> possibleMoves = new java.util.ArrayList<>();
+
+
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
@@ -143,27 +149,57 @@ public class Main extends Application {
 
     // SCREEN 1: START MENU
     private void showMenuScene() {
-        VBox layout = new VBox(20);
+        VBox layout = new VBox(30);
         layout.setAlignment(Pos.CENTER);
-        layout.setStyle("-fx-background-color: #2c3e50;");
+        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #233447, #1b2838);");
 
         Label title = new Label("CHESS");
-        title.setStyle("-fx-font-size: 50px; -fx-text-fill: white; -fx-font-weight: bold;");
+        title.setStyle("-fx-font-size: 64px; -fx-text-fill: white; -fx-font-weight: bold;");
+        VBox.setMargin(title, new Insets(0, 0, 30, 0));
 
-        Button playBtn = new Button("play");
-        Button settingsBtn = new Button("settings");
-        Button exitBtn = new Button("exit");
+        String btnStyle = """
+        -fx-background-color: transparent;
+        -fx-text-fill: white;
+        -fx-font-size: 24px;
+        -fx-padding: 8 24;
+        -fx-border-color: white;
+        -fx-border-width: 2;
+        -fx-border-radius: 6;
+        -fx-background-radius: 6;
+    """;
 
-        String btnStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 24px;";
+        String btnStyleHover = """
+        -fx-background-color: white;
+        -fx-text-fill: #233447;
+        -fx-font-size: 24px;
+        -fx-padding: 8 24;
+        -fx-border-color: white;
+        -fx-border-width: 2;
+        -fx-border-radius: 6;
+        -fx-background-radius: 6;
+    """;
+
+        Button playBtn = new Button("PLAY");
+        Button settingsBtn = new Button("SETTINGS");
+        Button exitBtn = new Button("EXIT");
+
         playBtn.setStyle(btnStyle);
         settingsBtn.setStyle(btnStyle);
         exitBtn.setStyle(btnStyle);
+
+        playBtn.setOnMouseEntered(e -> playBtn.setStyle(btnStyleHover));
+        playBtn.setOnMouseExited(e -> playBtn.setStyle(btnStyle));
+
+        settingsBtn.setOnMouseEntered(e -> settingsBtn.setStyle(btnStyleHover));
+        settingsBtn.setOnMouseExited(e -> settingsBtn.setStyle(btnStyle));
+
+        exitBtn.setOnMouseEntered(e -> exitBtn.setStyle(btnStyleHover));
+        exitBtn.setOnMouseExited(e -> exitBtn.setStyle(btnStyle));
 
         playBtn.setOnAction(e -> showSetupScene());
         exitBtn.setOnAction(e -> window.close());
 
         layout.getChildren().addAll(title, playBtn, settingsBtn, exitBtn);
-
         Scene scene = new Scene(layout, 800, 600);
         window.setScene(scene);
         window.show();
@@ -303,6 +339,11 @@ public class Main extends Application {
         updateBoard(boardGui);
 
         layout.setCenter(gameStack);
+        // ---- PAUSE OVERLAY ----
+        pauseOverlay = buildPauseOverlay();
+        pauseOverlay.setVisible(false);
+        gameStack.getChildren().add(pauseOverlay);
+
 
         // --- HISTORY ---
 
@@ -337,9 +378,20 @@ public class Main extends Application {
         blackTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
 
         topBar.getChildren().addAll(blackTimeLabel, whiteTimeLabel);
+        Button pauseBtn = new Button("≡");
+        pauseBtn.setOnAction(e -> togglePause());
+        pauseBtn.setStyle("-fx-font-size: 18px; -fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        topBar.getChildren().add(pauseBtn);
+
         layout.setTop(topBar);
 
         window.setScene(new Scene(layout, 900, 700));
+        window.getScene().setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case ESCAPE -> togglePause();
+            }
+        });
+
 
         // --- TIMELINE ---
         timeline = new Timeline(
@@ -422,6 +474,8 @@ public class Main extends Application {
             if (piece != null && piece.getColor() == game.getCurrentTurn()) {
                 selectedPosition = clickedPos;
                 System.out.println("Selected: " + clickedPos.toAlgebraicNotation());
+                possibleMoves.clear();
+                possibleMoves = piece.getValidMoves(game.getBoard());
                 updateBoard(boardGui); // Redraw to show highlight
             }
         }
@@ -430,6 +484,7 @@ public class Main extends Application {
             // If clicking the same tile again -> Deselect
             if (clickedPos.equals(selectedPosition)) {
                 selectedPosition = null;
+                possibleMoves.clear();
                 updateBoard(boardGui);
                 return;
             }
@@ -437,8 +492,13 @@ public class Main extends Application {
             // Try to execute the move in the game logic
             boolean success = game.playTurn(selectedPosition, clickedPos);
 
+            model.Piece piece = game.getBoard().getPieceAt(clickedPos);
+            if (piece != null) {
+                possibleMoves = piece.getValidMoves(game.getBoard());
+            }
             if (success) {
                 System.out.println("Move successful!");
+                possibleMoves.clear();
                 selectedPosition = null; // Reset selection after move
 
                 // 1. Update the board immediately so the user sees the final move
@@ -468,6 +528,8 @@ public class Main extends Application {
             }
             // Redraw board to reflect new positions or cleared selection
             updateBoard(boardGui);
+            possibleMoves.clear();
+
         }
     }
 
@@ -509,6 +571,12 @@ public class Main extends Application {
                     Rectangle highlight = new Rectangle(60, 60, Color.rgb(0, 255, 0, 0.4));
                     tile.getChildren().add(highlight);
                 }
+                // highlight possible moves
+                if (possibleMoves.contains(currentPos)) {
+                    Rectangle moveHighlight = new Rectangle(60, 60, Color.rgb(0, 255, 0, 0.25));
+                    tile.getChildren().add(moveHighlight);
+                }
+
 
                 // 3. Piece Rendering
                 model.Piece piece = game.getBoard().getPieceAt(currentPos);
@@ -531,4 +599,46 @@ public class Main extends Application {
             }
         }
     }
+    private void togglePause() {
+        if (!isPaused) {
+            isPaused = true;
+            timeline.pause();
+            pauseOverlay.setVisible(true);
+        } else {
+            isPaused = false;
+            timeline.play();
+            pauseOverlay.setVisible(false);
+        }
+    }
+    private StackPane buildPauseOverlay() {
+        StackPane overlay = new StackPane();
+        overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
+
+        VBox menu = new VBox(20);
+        menu.setAlignment(Pos.CENTER);
+
+        Button btnContinue = new Button("Continue");
+        Button btnRestart = new Button("Restart");
+        Button btnMain = new Button("Main Menu");
+
+        btnContinue.setOnAction(e -> togglePause());
+        btnRestart.setOnAction(e -> {
+            timeline.stop();
+            showBoardScene();
+        });
+        btnMain.setOnAction(e -> {
+            timeline.stop();
+            showMenuScene();
+        });
+
+        btnContinue.setStyle("-fx-font-size: 22px;");
+        btnRestart.setStyle("-fx-font-size: 22px;");
+        btnMain.setStyle("-fx-font-size: 22px;");
+
+        menu.getChildren().addAll(btnContinue, btnRestart, btnMain);
+        overlay.getChildren().add(menu);
+
+        return overlay;
+    }
+
 }
