@@ -135,9 +135,9 @@ public class GameState {
         moveHistory.push(moveRecord);
 
         updateTimer();
-        if (isGameOver) { return true; }
-
         switchTurn();
+        updateGameStatus();
+        if (isGameOver) { return true; }
         return true;
     }
 

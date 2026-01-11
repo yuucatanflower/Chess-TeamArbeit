@@ -491,6 +491,7 @@ public class Main extends Application {
 
             // Try to execute the move in the game logic
             boolean success = game.playTurn(selectedPosition, clickedPos);
+            System.out.println("GameOver? " + game.isGameOver() + " status=" + game.getStatusMessage());
 
             model.Piece piece = game.getBoard().getPieceAt(clickedPos);
             if (piece != null) {
