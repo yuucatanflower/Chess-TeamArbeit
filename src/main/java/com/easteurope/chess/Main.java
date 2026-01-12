@@ -33,7 +33,7 @@ public class Main extends Application {
     private Stage window; // Reference to the main window for switching of the scenes
     private Position selectedPosition = null;
     private long selectedTimeMs = 60 * 1000;
-    private model.coreData.Color selectedColor = model.coreData.Color.WHITE;
+    private com.easteurope.chess.model.coreData.Color selectedColor = com.easteurope.chess.model.coreData.Color.WHITE;
     private long selectedIncrementMs = 0;
 
     private Timeline timeline;
@@ -66,7 +66,7 @@ public class Main extends Application {
 
     // --- Console ---
     public static void startConsoleGame() {
-        GameState game = new GameState(5 * 60 * 1000, model.coreData.Color.WHITE, 0);
+        GameState game = new GameState(5 * 60 * 1000, com.easteurope.chess.model.coreData.Color.WHITE, 0);
 
 
 
@@ -292,13 +292,13 @@ public class Main extends Application {
         btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
 
         btnW.setOnAction(e -> {
-            selectedColor = model.coreData.Color.WHITE;
+            selectedColor = com.easteurope.chess.model.coreData.Color.WHITE;
             btnW.setStyle("-fx-background-color: #ffffff;");
             btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
 
         btnB.setOnAction(e -> {
-            selectedColor = model.coreData.Color.BLACK;
+            selectedColor = com.easteurope.chess.model.coreData.Color.BLACK;
             btnB.setStyle("-fx-background-color: #ffffff;");
             btnW.setStyle("-fx-background-color: #7f8c8d;");
         });
@@ -429,8 +429,8 @@ public class Main extends Application {
         StringBuilder sb = new StringBuilder();
         int moveNumber = 1;
 
-        for (model.coreData.Move move : game.getMoveHistory()) {
-            if (move.movedPiece().getColor() == model.coreData.Color.WHITE) {
+        for (com.easteurope.chess.model.coreData.Move move : game.getMoveHistory()) {
+            if (move.movedPiece().getColor() == com.easteurope.chess.model.coreData.Color.WHITE) {
                 sb.append(moveNumber++).append(". ");
             }
 
@@ -495,7 +495,7 @@ public class Main extends Application {
             boolean success = game.playTurn(selectedPosition, clickedPos);
             System.out.println("GameOver? " + game.isGameOver() + " status=" + game.getStatusMessage());
 
-            model.Piece piece = game.getBoard().getPieceAt(clickedPos);
+            com.easteurope.chess.model.Piece piece = game.getBoard().getPieceAt(clickedPos);
             if (piece != null) {
                 possibleMoves = piece.getValidMoves(game.getBoard());
             }
