@@ -2,7 +2,7 @@ module Chess.TeamArbeit {
     requires javafx.controls;
     requires javafx.fxml;
 
-    opens view to javafx.fxml;
-    exports view;
+    exports com.easteurope.chess;
+    opens com.easteurope.chess to javafx.fxml;
 
 }
