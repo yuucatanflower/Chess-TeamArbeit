@@ -212,7 +212,49 @@ public class Board {
     }
 
     //FEN String management
-    //TODO method to translate current board layout to a FEN string ( for Stockfish in the future )
-    public String toFEN(Color currentTurn, Position enPassantTarget, int halfMoveClock, int fullMoveNumber) {return "";}
+    // --- FEN STRING GENERATION  ---
+    public String toFEN(Color currentTurn, Position enPassantTarget, int halfMoveClock, int fullMoveNumber) {
+        StringBuilder fen = new StringBuilder();
+
+        //  Piece Placement
+        for (int row = 0; row < 8; row++) {
+            int emptyCount = 0;
+            for (int col = 0; col < 8; col++) {
+                Piece p = grid[row][col];
+                if (p == null) {
+                    emptyCount++;
+                } else {
+                    if (emptyCount > 0) {
+                        fen.append(emptyCount);
+                        emptyCount = 0;
+                    }
+                    char c = switch (p.getType()) {
+                        case PAWN -> 'P'; case ROOK -> 'R'; case KNIGHT -> 'N';
+                        case BISHOP -> 'B'; case QUEEN -> 'Q'; case KING -> 'K';
+                    };
+                    fen.append(p.getColor() == Color.BLACK ? Character.toLowerCase(c) : c);
+                }
+            }
+            if (emptyCount > 0) fen.append(emptyCount);
+            if (row < 7) fen.append("/");
+        }
+
+        //  Active Color
+        fen.append(" ");
+        fen.append(currentTurn == Color.WHITE ? "w" : "b");
+
+        //  Castling Rights (Defaulting to none '-' for now to be safe, or implement logic)
+        fen.append(" -");
+
+        //  En Passant Target
+        fen.append(" ");
+        fen.append(enPassantTarget != null ? enPassantTarget.toAlgebraicNotation() : "-");
+
+        //  Clocks
+        fen.append(" ").append(halfMoveClock);
+        fen.append(" ").append(fullMoveNumber);
+
+        return fen.toString();
+    }
 }
 

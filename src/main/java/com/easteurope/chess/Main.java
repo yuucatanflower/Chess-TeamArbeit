@@ -4,6 +4,7 @@ import com.easteurope.chess.controller.Stockfish;
 import com.easteurope.chess.model.Piece;
 import com.easteurope.chess.view.ImageLoader;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -42,6 +43,11 @@ public class Main extends Application {
     private StackPane pauseOverlay;
 
     private java.util.List<Position> possibleMoves = new java.util.ArrayList<>();
+
+    // --- NEW: Bot Variables ---
+    private int selectedBotLevel = 0; // 0 = PvP, 1-4 = Bot Level
+    private Stockfish bot;
+    private boolean isBotTurn = false;
 
 
     public static void main(String[] args) {
@@ -219,15 +225,46 @@ public class Main extends Application {
 
         layout.getChildren().add(chooseColor());
 
-        // Bot Placeholder
+        // --- NEW: Bot Selection Logic ---
         HBox bots = new HBox(20);
         bots.setAlignment(Pos.CENTER);
+
+        // Keep track of buttons to update styles
+        java.util.List<Button> botButtons = new java.util.ArrayList<>();
+
+        // PvP Option
+        Button pvpBtn = new Button("PvP");
+        pvpBtn.setPrefSize(80, 80);
+        pvpBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;"); // Default selected
+        pvpBtn.setOnAction(e -> {
+            selectedBotLevel = 0;
+            // Update styles
+            pvpBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+            for(Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+        bots.getChildren().add(pvpBtn);
+
+        // Bot Buttons (1-4)
         for (int i = 1; i <= 4; i++) {
+            final int level = i;
             VBox botBox = new VBox(5);
-            Rectangle imgPlaceholder = new Rectangle(80, 80, Color.GRAY);
-            Label name = new Label("BOT " + i);
-            name.setTextFill(Color.WHITE);
-            botBox.getChildren().addAll(imgPlaceholder, name);
+            // Replace placeholder rectangle with actual clickable button
+            Button botBtn = new Button("BOT " + i);
+            botBtn.setPrefSize(80, 80);
+            botBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            botButtons.add(botBtn);
+
+            botBtn.setOnAction(e -> {
+                selectedBotLevel = level;
+                // Update styles
+                pvpBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+                for(Button b : botButtons) {
+                    if(b == botBtn) b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                    else b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+                }
+            });
+
+            botBox.getChildren().addAll(botBtn); // Add button directly
             bots.getChildren().add(botBox);
         }
 
@@ -252,7 +289,20 @@ public class Main extends Application {
         Button startBtn = new Button("START");
         startBtn.setPrefSize(120, 40);
         startBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
-        startBtn.setOnAction(e -> showBoardScene());
+
+        // --- NEW: Start Logic (Init Bot) ---
+        startBtn.setOnAction(e -> {
+            if (selectedBotLevel > 0) {
+                bot = new Stockfish();
+                if (bot.startEngine()) {
+                    System.out.println("Engine Started. Level: " + selectedBotLevel);
+                } else {
+                    System.out.println("Engine Failed.");
+                    selectedBotLevel = 0; // Fallback
+                }
+            }
+            showBoardScene();
+        });
 
         layout.getChildren().addAll(title, bots, new Label("Select time control:"), timeControls, startBtn);
 
@@ -462,6 +512,9 @@ public class Main extends Application {
     }
 
     private void handleTileClick(int row, int col, GridPane boardGui) {
+        // --- NEW: Block input if Bot Turn ---
+        if (isBotTurn) return;
+
         // Since your Board logic (Row 0 = Black/Top) matches JavaFX (Row 0 = Top),
         // we use the coordinates directly without flipping.
         Position clickedPos = new Position(row, col);
@@ -515,6 +568,11 @@ public class Main extends Application {
                     return; // Stop execution here
                 }
 
+                // --- NEW: Trigger Bot Move if applicable ---
+                if (selectedBotLevel > 0 && !game.isGameOver()) {
+                    makeBotMove(boardGui);
+                }
+
                 return; // Return here to avoid double-updating at the bottom
             } else {
                 System.out.println("Invalid move or selection switch");
@@ -534,6 +592,40 @@ public class Main extends Application {
             possibleMoves.clear();
 
         }
+    }
+
+    // --- NEW: Bot Move Logic ---
+    private void makeBotMove(GridPane boardGui) {
+        isBotTurn = true; // Lock UI
+
+        new Thread(() -> {
+            try {
+                // Ensure toFEN() is implemented in Board.java!
+                String fen = game.getBoard().toFEN(game.getCurrentTurn(), null, 0, 1);
+
+                // Delay thinking based on difficulty (Level 1=fast, Level 4=slower)
+                String bestMove = bot.getRankedMove(fen, selectedBotLevel * 300, 1);
+
+                Platform.runLater(() -> {
+                    if (bestMove != null) {
+                        Position from = Position.fromAlgebraicNotation(bestMove.substring(0, 2));
+                        Position to = Position.fromAlgebraicNotation(bestMove.substring(2, 4));
+
+                        game.playTurn(from, to);
+                        updateBoard(boardGui);
+                        updateHistory();
+
+                        if (game.isGameOver()) {
+                            showGameOverDialog();
+                        }
+                    }
+                    isBotTurn = false; // Unlock UI
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                isBotTurn = false;
+            }
+        }).start();
     }
 
     private void showGameOverDialog() {
