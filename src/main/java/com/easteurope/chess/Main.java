@@ -18,12 +18,31 @@ import javafx.stage.Stage;
 import com.easteurope.chess.model.GameState;
 import com.easteurope.chess.model.coreData.Position;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
+
 import java.util.Scanner;
 
 public class Main extends Application {
-    private Stage window; // Reference to the main window for switching of the scenes
     private GameState game;
+    private Label whiteTimeLabel;
+    private Label blackTimeLabel;
+    private TextArea historyArea;
+    private Stage window; // Reference to the main window for switching of the scenes
     private Position selectedPosition = null;
+    private long selectedTimeMs = 60 * 1000;
+    private model.coreData.Color selectedColor = model.coreData.Color.WHITE;
+    private long selectedIncrementMs = 0;
+
+    private Timeline timeline;
+
+    private boolean isPaused = false;
+    private StackPane pauseOverlay;
+
+    private java.util.List<Position> possibleMoves = new java.util.ArrayList<>();
+
 
     public static void main(String[] args) {
 
@@ -47,7 +66,10 @@ public class Main extends Application {
 
     // --- Console ---
     public static void startConsoleGame() {
-        GameState game = new GameState();
+        GameState game = new GameState(5 * 60 * 1000, model.coreData.Color.WHITE, 0);
+
+
+
         Scanner input = new Scanner(System.in);
 
         System.out.println("---GAME STARTED---");
@@ -129,27 +151,57 @@ public class Main extends Application {
 
     // SCREEN 1: START MENU
     private void showMenuScene() {
-        VBox layout = new VBox(20);
+        VBox layout = new VBox(30);
         layout.setAlignment(Pos.CENTER);
-        layout.setStyle("-fx-background-color: #2c3e50;");
+        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #233447, #1b2838);");
 
         Label title = new Label("CHESS");
-        title.setStyle("-fx-font-size: 50px; -fx-text-fill: white; -fx-font-weight: bold;");
+        title.setStyle("-fx-font-size: 64px; -fx-text-fill: white; -fx-font-weight: bold;");
+        VBox.setMargin(title, new Insets(0, 0, 30, 0));
 
-        Button playBtn = new Button("play");
-        Button settingsBtn = new Button("settings");
-        Button exitBtn = new Button("exit");
+        String btnStyle = """
+        -fx-background-color: transparent;
+        -fx-text-fill: white;
+        -fx-font-size: 24px;
+        -fx-padding: 8 24;
+        -fx-border-color: white;
+        -fx-border-width: 2;
+        -fx-border-radius: 6;
+        -fx-background-radius: 6;
+    """;
 
-        String btnStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 24px;";
+        String btnStyleHover = """
+        -fx-background-color: white;
+        -fx-text-fill: #233447;
+        -fx-font-size: 24px;
+        -fx-padding: 8 24;
+        -fx-border-color: white;
+        -fx-border-width: 2;
+        -fx-border-radius: 6;
+        -fx-background-radius: 6;
+    """;
+
+        Button playBtn = new Button("PLAY");
+        Button settingsBtn = new Button("SETTINGS");
+        Button exitBtn = new Button("EXIT");
+
         playBtn.setStyle(btnStyle);
         settingsBtn.setStyle(btnStyle);
         exitBtn.setStyle(btnStyle);
+
+        playBtn.setOnMouseEntered(e -> playBtn.setStyle(btnStyleHover));
+        playBtn.setOnMouseExited(e -> playBtn.setStyle(btnStyle));
+
+        settingsBtn.setOnMouseEntered(e -> settingsBtn.setStyle(btnStyleHover));
+        settingsBtn.setOnMouseExited(e -> settingsBtn.setStyle(btnStyle));
+
+        exitBtn.setOnMouseEntered(e -> exitBtn.setStyle(btnStyleHover));
+        exitBtn.setOnMouseExited(e -> exitBtn.setStyle(btnStyle));
 
         playBtn.setOnAction(e -> showSetupScene());
         exitBtn.setOnAction(e -> window.close());
 
         layout.getChildren().addAll(title, playBtn, settingsBtn, exitBtn);
-
         Scene scene = new Scene(layout, 800, 600);
         window.setScene(scene);
         window.show();
@@ -164,6 +216,8 @@ public class Main extends Application {
 
         Label title = new Label("Bot Selection + Time Control");
         title.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
+
+        layout.getChildren().add(chooseColor());
 
         // Bot Placeholder
         HBox bots = new HBox(20);
@@ -180,12 +234,20 @@ public class Main extends Application {
         // Time Setting
         HBox timeControls = new HBox(20);
         timeControls.setAlignment(Pos.CENTER);
-        String[] times = {"5m", "10m", "20m"};
-        for (String t : times) {
-            Button tBtn = new Button(t);
-            tBtn.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-            timeControls.getChildren().add(tBtn);
-        }
+
+        Button btn1 = new Button("1m");
+        Button btn5 = new Button("5m");
+        Button btn10 = new Button("10m");
+
+        btn1.setOnAction(e -> selectedTimeMs = 60 * 1000);
+        btn5.setOnAction(e -> selectedTimeMs = 5 * 60 * 1000);
+        btn10.setOnAction(e -> selectedTimeMs = 10 * 60 * 1000);
+
+        btn1.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        btn5.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        btn10.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+
+        timeControls.getChildren().addAll(btn1, btn5, btn10);
 
         Button startBtn = new Button("START");
         startBtn.setPrefSize(120, 40);
@@ -195,13 +257,64 @@ public class Main extends Application {
         layout.getChildren().addAll(title, bots, new Label("Select time control:"), timeControls, startBtn);
 
         window.setScene(new Scene(layout, 800, 600));
+
+        // increments
+        HBox incrementControls = new HBox(20);
+        incrementControls.setAlignment(Pos.CENTER);
+
+        Button inc0 = new Button("+0s");
+        Button inc5 = new Button("+5s");
+        Button inc10 = new Button("+10s");
+
+        inc0.setOnAction(e -> selectedIncrementMs = 0);
+        inc5.setOnAction(e -> selectedIncrementMs = 5 * 1000);
+        inc10.setOnAction(e -> selectedIncrementMs = 10 * 1000);
+
+        inc0.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        inc5.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        inc10.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+
+        layout.getChildren().addAll(new Label("Select increment:"), incrementControls);
+
+        incrementControls.getChildren().addAll(inc0, inc5, inc10);
+
     }
+
+    private HBox chooseColor() {
+
+        HBox colorControl = new HBox(30);
+        colorControl.setAlignment(Pos.CENTER);
+
+        Button btnW = new Button("White");
+        Button btnB = new Button("Black");
+
+        btnW.setStyle("-fx-background-color: #ecf0f1;");
+        btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+
+        btnW.setOnAction(e -> {
+            selectedColor = model.coreData.Color.WHITE;
+            btnW.setStyle("-fx-background-color: #ffffff;");
+            btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        btnB.setOnAction(e -> {
+            selectedColor = model.coreData.Color.BLACK;
+            btnB.setStyle("-fx-background-color: #ffffff;");
+            btnW.setStyle("-fx-background-color: #7f8c8d;");
+        });
+
+        colorControl.getChildren().addAll(btnW, btnB);
+        return colorControl;
+    }
+
+
+
+
 
     // SCREEN 3: GAME BOARD
     private void showBoardScene() {
-        if (this.game == null) {
-            this.game = new GameState();
-        }
+        game = new GameState(selectedTimeMs, selectedColor, selectedIncrementMs);
+
 
         BorderPane layout = new BorderPane();
         layout.setStyle("-fx-background-color: #2c3e50;");
@@ -228,8 +341,18 @@ public class Main extends Application {
         updateBoard(boardGui);
 
         layout.setCenter(gameStack);
+        // ---- PAUSE OVERLAY ----
+        pauseOverlay = buildPauseOverlay();
+        pauseOverlay.setVisible(false);
+        gameStack.getChildren().add(pauseOverlay);
 
-        // --- Right: MOVE HISTORY & BANNER ---
+
+        // --- HISTORY ---
+
+        historyArea = new TextArea();
+        historyArea.setEditable(false);
+        historyArea.setPrefHeight(400);
+
         VBox sidebar = new VBox(10);
         sidebar.setPadding(new Insets(10));
         sidebar.setStyle("-fx-background-color: #34495e;");
@@ -238,25 +361,86 @@ public class Main extends Application {
         Label historyLabel = new Label("Move Order");
         historyLabel.setTextFill(Color.WHITE);
 
-        TextArea dummyHistory = new TextArea("1. e4 d5\n2. exd5 Qxd5"); // Placeholder
-        dummyHistory.setEditable(false);
-        dummyHistory.setPrefHeight(400);
-
-        sidebar.getChildren().addAll(historyLabel, dummyHistory);
+        sidebar.getChildren().addAll(historyLabel, historyArea);
         layout.setRight(sidebar);
 
-        // --- Up: TIMER ---
+
+        // --- TIMER ---
         HBox topBar = new HBox(100);
         topBar.setAlignment(Pos.CENTER);
         topBar.setPadding(new Insets(10));
-        Label timerW = new Label("White: 05:00");
-        Label timerB = new Label("Black: 05:00");
-        timerW.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-        timerB.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-        topBar.getChildren().addAll(timerB, timerW);
+
+        whiteTimeLabel = new Label();
+        blackTimeLabel = new Label();
+
+        whiteTimeLabel.setText("White: " + formatTime(game.getWhiteTimeMs()));
+        blackTimeLabel.setText("Black: " + formatTime(game.getBlackTimeMs()));
+
+        whiteTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+        blackTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+
+        topBar.getChildren().addAll(blackTimeLabel, whiteTimeLabel);
+        Button pauseBtn = new Button("≡");
+        pauseBtn.setOnAction(e -> togglePause());
+        pauseBtn.setStyle("-fx-font-size: 18px; -fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        topBar.getChildren().add(pauseBtn);
+
         layout.setTop(topBar);
 
         window.setScene(new Scene(layout, 900, 700));
+        window.getScene().setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case ESCAPE -> togglePause();
+            }
+        });
+
+
+        // --- TIMELINE ---
+        timeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), e -> {
+
+                    game.tickTimer();   // ⏱️ Zeit läuft wirklich
+
+                    whiteTimeLabel.setText(
+                            "White: " + formatTime(game.getWhiteTimeMs())
+                    );
+                    blackTimeLabel.setText(
+                            "Black: " + formatTime(game.getBlackTimeMs())
+                    );
+
+                    if (game.isGameOver()) {
+                        timeline.stop();
+                    }
+                })
+        );
+
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
+    }
+
+    private String formatTime(long ms) {
+        long totalSeconds = ms / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    private void updateHistory() {
+        StringBuilder sb = new StringBuilder();
+        int moveNumber = 1;
+
+        for (model.coreData.Move move : game.getMoveHistory()) {
+            if (move.movedPiece().getColor() == model.coreData.Color.WHITE) {
+                sb.append(moveNumber++).append(". ");
+            }
+
+            sb.append(move.from().toAlgebraicNotation())
+                    .append("-")
+                    .append(move.to().toAlgebraicNotation())
+                    .append("\n");
+        }
+
+        historyArea.setText(sb.toString());
     }
 
     // Builds the invisible grid for click detection
@@ -292,6 +476,8 @@ public class Main extends Application {
             if (piece != null && piece.getColor() == game.getCurrentTurn()) {
                 selectedPosition = clickedPos;
                 System.out.println("Selected: " + clickedPos.toAlgebraicNotation());
+                possibleMoves.clear();
+                possibleMoves = piece.getValidMoves(game.getBoard());
                 updateBoard(boardGui); // Redraw to show highlight
             }
         }
@@ -300,19 +486,28 @@ public class Main extends Application {
             // If clicking the same tile again -> Deselect
             if (clickedPos.equals(selectedPosition)) {
                 selectedPosition = null;
+                possibleMoves.clear();
                 updateBoard(boardGui);
                 return;
             }
 
             // Try to execute the move in the game logic
             boolean success = game.playTurn(selectedPosition, clickedPos);
+            System.out.println("GameOver? " + game.isGameOver() + " status=" + game.getStatusMessage());
 
+            model.Piece piece = game.getBoard().getPieceAt(clickedPos);
+            if (piece != null) {
+                possibleMoves = piece.getValidMoves(game.getBoard());
+            }
             if (success) {
                 System.out.println("Move successful!");
+                possibleMoves.clear();
                 selectedPosition = null; // Reset selection after move
 
                 // 1. Update the board immediately so the user sees the final move
                 updateBoard(boardGui);
+
+                updateHistory();
 
                 // 2. Check if the game is over
                 if (game.isGameOver()) {
@@ -336,6 +531,8 @@ public class Main extends Application {
             }
             // Redraw board to reflect new positions or cleared selection
             updateBoard(boardGui);
+            possibleMoves.clear();
+
         }
     }
 
@@ -377,6 +574,12 @@ public class Main extends Application {
                     Rectangle highlight = new Rectangle(60, 60, Color.rgb(0, 255, 0, 0.4));
                     tile.getChildren().add(highlight);
                 }
+                // highlight possible moves
+                if (possibleMoves.contains(currentPos)) {
+                    Rectangle moveHighlight = new Rectangle(60, 60, Color.rgb(0, 255, 0, 0.25));
+                    tile.getChildren().add(moveHighlight);
+                }
+
 
                 // 3. Piece Rendering
                 Piece piece = game.getBoard().getPieceAt(currentPos);
@@ -398,6 +601,47 @@ public class Main extends Application {
                 boardGui.add(tile, col, row);
             }
         }
+    }
+    private void togglePause() {
+        if (!isPaused) {
+            isPaused = true;
+            timeline.pause();
+            pauseOverlay.setVisible(true);
+        } else {
+            isPaused = false;
+            timeline.play();
+            pauseOverlay.setVisible(false);
+        }
+    }
+    private StackPane buildPauseOverlay() {
+        StackPane overlay = new StackPane();
+        overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
+
+        VBox menu = new VBox(20);
+        menu.setAlignment(Pos.CENTER);
+
+        Button btnContinue = new Button("Continue");
+        Button btnRestart = new Button("Restart");
+        Button btnMain = new Button("Main Menu");
+
+        btnContinue.setOnAction(e -> togglePause());
+        btnRestart.setOnAction(e -> {
+            timeline.stop();
+            showBoardScene();
+        });
+        btnMain.setOnAction(e -> {
+            timeline.stop();
+            showMenuScene();
+        });
+
+        btnContinue.setStyle("-fx-font-size: 22px;");
+        btnRestart.setStyle("-fx-font-size: 22px;");
+        btnMain.setStyle("-fx-font-size: 22px;");
+
+        menu.getChildren().addAll(btnContinue, btnRestart, btnMain);
+        overlay.getChildren().add(menu);
+
+        return overlay;
     }
 
 }
