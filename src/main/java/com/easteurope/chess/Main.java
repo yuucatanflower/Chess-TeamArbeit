@@ -75,7 +75,6 @@ public class Main extends Application {
         GameState game = new GameState(5 * 60 * 1000, com.easteurope.chess.model.coreData.Color.WHITE, 0);
 
 
-
         Scanner input = new Scanner(System.in);
 
         System.out.println("---GAME STARTED---");
@@ -166,26 +165,26 @@ public class Main extends Application {
         VBox.setMargin(title, new Insets(0, 0, 30, 0));
 
         String btnStyle = """
-        -fx-background-color: transparent;
-        -fx-text-fill: white;
-        -fx-font-size: 24px;
-        -fx-padding: 8 24;
-        -fx-border-color: white;
-        -fx-border-width: 2;
-        -fx-border-radius: 6;
-        -fx-background-radius: 6;
-    """;
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """;
 
         String btnStyleHover = """
-        -fx-background-color: white;
-        -fx-text-fill: #233447;
-        -fx-font-size: 24px;
-        -fx-padding: 8 24;
-        -fx-border-color: white;
-        -fx-border-width: 2;
-        -fx-border-radius: 6;
-        -fx-background-radius: 6;
-    """;
+                    -fx-background-color: white;
+                    -fx-text-fill: #233447;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """;
 
         Button playBtn = new Button("PLAY");
         Button settingsBtn = new Button("SETTINGS");
@@ -206,6 +205,8 @@ public class Main extends Application {
 
         playBtn.setOnAction(e -> showSetupScene());
         exitBtn.setOnAction(e -> window.close());
+
+        settingsBtn.setOnAction(e -> showSettingsScene());
 
         layout.getChildren().addAll(title, playBtn, settingsBtn, exitBtn);
         Scene scene = new Scene(layout, 800, 600);
@@ -240,7 +241,7 @@ public class Main extends Application {
             selectedBotLevel = 0;
             // Update styles
             pvpBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
-            for(Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            for (Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
         bots.getChildren().add(pvpBtn);
 
@@ -258,8 +259,8 @@ public class Main extends Application {
                 selectedBotLevel = level;
                 // Update styles
                 pvpBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-                for(Button b : botButtons) {
-                    if(b == botBtn) b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                for (Button b : botButtons) {
+                    if (b == botBtn) b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
                     else b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
                 }
             });
@@ -280,9 +281,31 @@ public class Main extends Application {
         btn5.setOnAction(e -> selectedTimeMs = 5 * 60 * 1000);
         btn10.setOnAction(e -> selectedTimeMs = 10 * 60 * 1000);
 
-        btn1.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        btn5.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        btn10.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        btn1.setStyle("-fx-background-color: #ffffff;");
+        btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+
+        btn1.setOnAction(e -> {
+            selectedTimeMs = 60 * 1000;
+            btn1.setStyle("-fx-background-color: #ffffff;");
+            btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        btn5.setOnAction(e -> {
+            selectedTimeMs = 5 * 60 * 1000;
+            btn5.setStyle("-fx-background-color: #ffffff;");
+            btn1.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        btn10.setOnAction(e -> {
+            selectedTimeMs = 10 * 60 * 1000;
+            btn10.setStyle("-fx-background-color: #ffffff;");
+            btn1.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
 
         timeControls.getChildren().addAll(btn1, btn5, btn10);
 
@@ -316,19 +339,38 @@ public class Main extends Application {
         Button inc5 = new Button("+5s");
         Button inc10 = new Button("+10s");
 
-        inc0.setOnAction(e -> selectedIncrementMs = 0);
-        inc5.setOnAction(e -> selectedIncrementMs = 5 * 1000);
-        inc10.setOnAction(e -> selectedIncrementMs = 10 * 1000);
+        inc0.setStyle("-fx-background-color: #ffffff;");
+        inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
 
-        inc0.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        inc5.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        inc10.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        inc0.setOnAction(e -> {
+            selectedIncrementMs = 0;
+            inc0.setStyle("-fx-background-color: #ffffff;");
+            inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        inc5.setOnAction(e -> {
+            selectedIncrementMs = 5 * 1000;
+            inc5.setStyle("-fx-background-color: #ffffff;");
+            inc0.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        inc10.setOnAction(e -> {
+            selectedIncrementMs = 10 * 1000;
+            inc10.setStyle("-fx-background-color: #ffffff;");
+            inc0.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
 
         layout.getChildren().addAll(new Label("Select increment:"), incrementControls);
 
         incrementControls.getChildren().addAll(inc0, inc5, inc10);
 
     }
+
 
     private HBox chooseColor() {
 
@@ -357,9 +399,56 @@ public class Main extends Application {
         return colorControl;
     }
 
+    // Setting Scene
+    private void showSettingsScene() {
+        VBox layout = new VBox(30);
+        layout.setAlignment(Pos.CENTER);
+        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #233447, #1b2838);");
 
+        Label title = new Label("SETTINGS");
+        title.setStyle("-fx-font-size: 48px; -fx-text-fill: white; -fx-font-weight: bold;");
 
+        Button backBtn = new Button("BACK TO MENU");
+        backBtn.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """);
 
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle("""
+                    -fx-background-color: white;
+                    -fx-text-fill: #233447;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """));
+
+        backBtn.setOnMouseExited(e -> backBtn.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """));
+
+        backBtn.setOnAction(e -> showMenuScene());
+
+        layout.getChildren().addAll(title, backBtn);
+
+        Scene scene = new Scene(layout, 900, 700);
+        window.setScene(scene);
+    }
 
     // SCREEN 3: GAME BOARD
     private void showBoardScene() {
@@ -694,6 +783,7 @@ public class Main extends Application {
             }
         }
     }
+
     private void togglePause() {
         if (!isPaused) {
             isPaused = true;
@@ -705,6 +795,7 @@ public class Main extends Application {
             pauseOverlay.setVisible(false);
         }
     }
+
     private StackPane buildPauseOverlay() {
         StackPane overlay = new StackPane();
         overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
