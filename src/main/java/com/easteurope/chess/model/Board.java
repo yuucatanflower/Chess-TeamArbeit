@@ -1,5 +1,6 @@
 package com.easteurope.chess.model;
 
+import com.easteurope.chess.model.coreData.Move;
 import com.easteurope.chess.strategies.*;
 import com.easteurope.chess.model.coreData.Color;
 import com.easteurope.chess.model.coreData.PieceType;
@@ -7,6 +8,7 @@ import com.easteurope.chess.model.coreData.Position;
 
 public class Board {
     private final Piece[][] grid;
+    private Move lastMove;
 
     public Board() {
         this.grid = new Piece[8][8];
@@ -14,6 +16,14 @@ public class Board {
     }
 
     // ACCESSORS / HELPERS
+
+    public Move getLastMove() {
+        return lastMove;
+    }
+
+    public void setLastMove(Move lastMove) {
+        this.lastMove = lastMove;
+    }
 
     public Piece getPieceAt(Position pos) {
         return grid[pos.row()][pos.col()];
@@ -24,13 +34,13 @@ public class Board {
         return grid[pos.row()][pos.col()];
     }
 
-        public void setPieceAt(Position pos, Piece piece) {
-            grid[pos.row()][pos.col()] = piece;
-        } // sets piece on a position using Position object
+    public void setPieceAt(Position pos, Piece piece) {
+        grid[pos.row()][pos.col()] = piece;
+    } // sets piece on a position using Position object
 
     public void setPieceAt(String algebraicNotation, Piece piece) {
-       Position pos = Position.fromAlgebraicNotation(algebraicNotation);
-       this.setPieceAt(pos, piece);
+        Position pos = Position.fromAlgebraicNotation(algebraicNotation);
+        this.setPieceAt(pos, piece);
     } // sets piece on a position , overloaded using a string input with algebraic notation
 
     public boolean isValidPos(Position pos) {
@@ -38,21 +48,21 @@ public class Board {
     } // checks if the position is valid
 
     //MOVE MANAGEMENT
-    public Piece executeMove(Position from , Position to) {
+    public Piece executeMove(Position from, Position to) {
         Piece movedPiece = getPieceAt(from);
         Piece target = getPieceAt(to);
 
         setPieceAt(to, movedPiece);
         setPieceAt(from, null); // update the grid
 
-        if(movedPiece !=null ){
+        if (movedPiece != null) {
             movedPiece.internal_setPosition(to); // update pieces "memory"
             movedPiece.internal_setHasMoved(true);
         }
         return target; // return captured piece so GameState (later) can save it in the Move record
     } // move execution method
 
-    public void undoMove(Position from , Position to , Piece capturedPiece , boolean wasFirstMove) {
+    public void undoMove(Position from, Position to, Piece capturedPiece, boolean wasFirstMove) {
         Piece piece = getPieceAt(to); // our piece is currently at the "to" position , we want to get it back to from
         setPieceAt(from, piece); // return it to "from" spot
 
@@ -70,7 +80,7 @@ public class Board {
     }
 
     //board init
-    public void initializeBoard(){
+    public void initializeBoard() {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 grid[row][col] = null;
@@ -128,7 +138,7 @@ public class Board {
                         case PAWN:
                             if (piece.getColor() == Color.BLACK) {
                                 symbol = 'p';
-                            }else{
+                            } else {
                                 symbol = 'P';
                             }
                             break;
@@ -136,7 +146,7 @@ public class Board {
                         case ROOK:
                             if (piece.getColor() == Color.BLACK) {
                                 symbol = 'r';
-                            }else{
+                            } else {
                                 symbol = 'R';
                             }
                             break;
@@ -144,7 +154,7 @@ public class Board {
                         case KNIGHT:
                             if (piece.getColor() == Color.BLACK) {
                                 symbol = 'n';
-                            }else{
+                            } else {
                                 symbol = 'N';
                             }
                             break;
@@ -152,7 +162,7 @@ public class Board {
                         case BISHOP:
                             if (piece.getColor() == Color.BLACK) {
                                 symbol = 'b';
-                            }else{
+                            } else {
                                 symbol = 'B';
                             }
                             break;
@@ -160,7 +170,7 @@ public class Board {
                         case QUEEN:
                             if (piece.getColor() == Color.BLACK) {
                                 symbol = 'q';
-                            }else{
+                            } else {
                                 symbol = 'Q';
                             }
                             break;
@@ -168,7 +178,7 @@ public class Board {
                         case KING:
                             if (piece.getColor() == Color.BLACK) {
                                 symbol = 'k';
-                            }else{
+                            } else {
                                 symbol = 'K';
                             }
                             break;
@@ -187,7 +197,7 @@ public class Board {
 
     }
 
-    public Board copy(){
+    public Board copy() {
         Board newBoard = new Board();
 
         // clear the initialized board
@@ -212,7 +222,53 @@ public class Board {
     }
 
     //FEN String management
-    //TODO method to translate current board layout to a FEN string ( for Stockfish in the future )
-    public String toFEN(Color currentTurn, Position enPassantTarget, int halfMoveClock, int fullMoveNumber) {return "";}
+    // --- FEN STRING GENERATION  ---
+    public String toFEN(Color currentTurn, Position enPassantTarget, int halfMoveClock, int fullMoveNumber) {
+        StringBuilder fen = new StringBuilder();
+
+        //  Piece Placement
+        for (int row = 0; row < 8; row++) {
+            int emptyCount = 0;
+            for (int col = 0; col < 8; col++) {
+                Piece p = grid[row][col];
+                if (p == null) {
+                    emptyCount++;
+                } else {
+                    if (emptyCount > 0) {
+                        fen.append(emptyCount);
+                        emptyCount = 0;
+                    }
+                    char c = switch (p.getType()) {
+                        case PAWN -> 'P';
+                        case ROOK -> 'R';
+                        case KNIGHT -> 'N';
+                        case BISHOP -> 'B';
+                        case QUEEN -> 'Q';
+                        case KING -> 'K';
+                    };
+                    fen.append(p.getColor() == Color.BLACK ? Character.toLowerCase(c) : c);
+                }
+            }
+            if (emptyCount > 0) fen.append(emptyCount);
+            if (row < 7) fen.append("/");
+        }
+
+        //  Active Color
+        fen.append(" ");
+        fen.append(currentTurn == Color.WHITE ? "w" : "b");
+
+        //  Castling Rights (Defaulting to none '-' for now to be safe, or implement logic)
+        fen.append(" -");
+
+        //  En Passant Target
+        fen.append(" ");
+        fen.append(enPassantTarget != null ? enPassantTarget.toAlgebraicNotation() : "-");
+
+        //  Clocks
+        fen.append(" ").append(halfMoveClock);
+        fen.append(" ").append(fullMoveNumber);
+
+        return fen.toString();
+    }
 }
 

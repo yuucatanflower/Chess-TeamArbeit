@@ -3,7 +3,9 @@ package com.easteurope.chess;
 import com.easteurope.chess.controller.Stockfish;
 import com.easteurope.chess.model.Piece;
 import com.easteurope.chess.view.ImageLoader;
+import com.easteurope.chess.view.SoundManager; // Added SoundManager import
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -17,6 +19,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import com.easteurope.chess.model.GameState;
 import com.easteurope.chess.model.coreData.Position;
+import com.easteurope.chess.model.coreData.PieceType; // Needed for sound logic
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -33,7 +36,7 @@ public class Main extends Application {
     private Stage window; // Reference to the main window for switching of the scenes
     private Position selectedPosition = null;
     private long selectedTimeMs = 60 * 1000;
-    private model.coreData.Color selectedColor = model.coreData.Color.WHITE;
+    private com.easteurope.chess.model.coreData.Color selectedColor = com.easteurope.chess.model.coreData.Color.WHITE;
     private long selectedIncrementMs = 0;
 
     private Timeline timeline;
@@ -42,6 +45,11 @@ public class Main extends Application {
     private StackPane pauseOverlay;
 
     private java.util.List<Position> possibleMoves = new java.util.ArrayList<>();
+
+    // --- Bot Variables ---
+    private int selectedBotLevel = 0; // 0 = PvP, 1-4 = Bot Level
+    private Stockfish bot;
+    private boolean isBotTurn = false;
 
 
     public static void main(String[] args) {
@@ -66,8 +74,7 @@ public class Main extends Application {
 
     // --- Console ---
     public static void startConsoleGame() {
-        GameState game = new GameState(5 * 60 * 1000, model.coreData.Color.WHITE, 0);
-
+        GameState game = new GameState(5 * 60 * 1000, com.easteurope.chess.model.coreData.Color.WHITE, 0);
 
 
         Scanner input = new Scanner(System.in);
@@ -145,6 +152,10 @@ public class Main extends Application {
         this.window = primaryStage;
         window.setTitle("Chess TeamArbeit");
 
+        // --- Initialize Sounds ---
+        SoundManager.loadSounds();
+        SoundManager.startMusic();
+
         // Start with first scene (menu)
         showMenuScene();
     }
@@ -189,6 +200,7 @@ public class Main extends Application {
         settingsBtn.setStyle(btnStyle);
         exitBtn.setStyle(btnStyle);
 
+        // ---  Sound on Click ---
         playBtn.setOnMouseEntered(e -> playBtn.setStyle(btnStyleHover));
         playBtn.setOnMouseExited(e -> playBtn.setStyle(btnStyle));
 
@@ -198,10 +210,33 @@ public class Main extends Application {
         exitBtn.setOnMouseEntered(e -> exitBtn.setStyle(btnStyleHover));
         exitBtn.setOnMouseExited(e -> exitBtn.setStyle(btnStyle));
 
-        playBtn.setOnAction(e -> showSetupScene());
-        exitBtn.setOnAction(e -> window.close());
+        playBtn.setOnAction(e -> {
+            SoundManager.playSound("click");
+            showSetupScene();
+        });
 
-        layout.getChildren().addAll(title, playBtn, settingsBtn, exitBtn);
+        exitBtn.setOnAction(e -> {
+            SoundManager.playSound("click");
+            window.close();
+        });
+
+        // --- Music Toggle Button ---
+        Button musicBtn = new Button("MUSIC: ON");
+        musicBtn.setStyle(btnStyle);
+        musicBtn.setOnAction(e -> {
+            SoundManager.toggleMusic();
+            SoundManager.playSound("click");
+            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
+        });
+        musicBtn.setOnMouseEntered(e -> musicBtn.setStyle(btnStyleHover));
+        musicBtn.setOnMouseExited(e -> musicBtn.setStyle(btnStyle));
+
+        settingsBtn.setOnAction(e -> {
+            SoundManager.playSound("click");
+            showSettingsScene();
+        });
+
+        layout.getChildren().addAll(title, playBtn, settingsBtn, musicBtn, exitBtn);
         Scene scene = new Scene(layout, 800, 600);
         window.setScene(scene);
         window.show();
@@ -219,16 +254,47 @@ public class Main extends Application {
 
         layout.getChildren().add(chooseColor());
 
-        // Bot Placeholder
+        // --- Bot Selection Logic ---
         HBox bots = new HBox(20);
         bots.setAlignment(Pos.CENTER);
+
+        // Keep track of buttons to update styles
+        java.util.List<Button> botButtons = new java.util.ArrayList<>();
+
+        // PvP Option
+        Button pvpBtn = new Button("PvP");
+        pvpBtn.setPrefSize(80, 80);
+        pvpBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;"); // Default selected
+        pvpBtn.setOnAction(e -> {
+            selectedBotLevel = 0;
+            SoundManager.playSound("click");
+            // Update styles
+            pvpBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+            for(Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+        bots.getChildren().add(pvpBtn);
+
+        // Bot Buttons (1-4)
         for (int i = 1; i <= 4; i++) {
-            VBox botBox = new VBox(5);
-            Rectangle imgPlaceholder = new Rectangle(80, 80, Color.GRAY);
-            Label name = new Label("BOT " + i);
-            name.setTextFill(Color.WHITE);
-            botBox.getChildren().addAll(imgPlaceholder, name);
-            bots.getChildren().add(botBox);
+            final int level = i;
+            // Replace placeholder rectangle with actual clickable button
+            Button botBtn = new Button("BOT " + i);
+            botBtn.setPrefSize(80, 80);
+            botBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            botButtons.add(botBtn);
+
+            botBtn.setOnAction(e -> {
+                selectedBotLevel = level;
+                SoundManager.playSound("click");
+                // Update styles
+                pvpBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+                for(Button b : botButtons) {
+                    if(b == botBtn) b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                    else b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+                }
+            });
+
+            bots.getChildren().add(botBtn);
         }
 
         // Time Setting
@@ -239,20 +305,60 @@ public class Main extends Application {
         Button btn5 = new Button("5m");
         Button btn10 = new Button("10m");
 
-        btn1.setOnAction(e -> selectedTimeMs = 60 * 1000);
-        btn5.setOnAction(e -> selectedTimeMs = 5 * 60 * 1000);
-        btn10.setOnAction(e -> selectedTimeMs = 10 * 60 * 1000);
+        btn1.setOnAction(e -> { selectedTimeMs = 60 * 1000; SoundManager.playSound("click"); });
+        btn5.setOnAction(e -> { selectedTimeMs = 5 * 60 * 1000; SoundManager.playSound("click"); });
+        btn10.setOnAction(e -> { selectedTimeMs = 10 * 60 * 1000; SoundManager.playSound("click"); });
 
-        btn1.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        btn5.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        btn10.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        btn1.setStyle("-fx-background-color: #ffffff;");
+        btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+
+        btn1.setOnAction(e -> {
+            selectedTimeMs = 60 * 1000;
+            SoundManager.playSound("click");
+            btn1.setStyle("-fx-background-color: #ffffff;");
+            btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        btn5.setOnAction(e -> {
+            selectedTimeMs = 5 * 60 * 1000;
+            SoundManager.playSound("click");
+            btn5.setStyle("-fx-background-color: #ffffff;");
+            btn1.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        btn10.setOnAction(e -> {
+            selectedTimeMs = 10 * 60 * 1000;
+            SoundManager.playSound("click");
+            btn10.setStyle("-fx-background-color: #ffffff;");
+            btn1.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
 
         timeControls.getChildren().addAll(btn1, btn5, btn10);
 
         Button startBtn = new Button("START");
         startBtn.setPrefSize(120, 40);
         startBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
-        startBtn.setOnAction(e -> showBoardScene());
+
+        // --- Start Logic (Init Bot) ---
+        startBtn.setOnAction(e -> {
+            SoundManager.playSound("start");
+            // Initialize Bot if selected
+            if (selectedBotLevel > 0) {
+                bot = new Stockfish();
+                if (bot.startEngine()) {
+                    System.out.println("Engine Started. Level: " + selectedBotLevel);
+                } else {
+                    System.out.println("Engine Failed.");
+                    selectedBotLevel = 0; // Fallback
+                }
+            }
+            showBoardScene();
+        });
 
         layout.getChildren().addAll(title, bots, new Label("Select time control:"), timeControls, startBtn);
 
@@ -266,19 +372,41 @@ public class Main extends Application {
         Button inc5 = new Button("+5s");
         Button inc10 = new Button("+10s");
 
-        inc0.setOnAction(e -> selectedIncrementMs = 0);
-        inc5.setOnAction(e -> selectedIncrementMs = 5 * 1000);
-        inc10.setOnAction(e -> selectedIncrementMs = 10 * 1000);
+        inc0.setStyle("-fx-background-color: #ffffff;");
+        inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
 
-        inc0.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        inc5.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        inc10.setStyle("-fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        inc0.setOnAction(e -> {
+            selectedIncrementMs = 0;
+            SoundManager.playSound("click");
+            inc0.setStyle("-fx-background-color: #ffffff;");
+            inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        inc5.setOnAction(e -> {
+            selectedIncrementMs = 5 * 1000;
+            SoundManager.playSound("click");
+            inc5.setStyle("-fx-background-color: #ffffff;");
+            inc0.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
+        inc10.setOnAction(e -> {
+            selectedIncrementMs = 10 * 1000;
+            SoundManager.playSound("click");
+            inc10.setStyle("-fx-background-color: #ffffff;");
+            inc0.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
 
         layout.getChildren().addAll(new Label("Select increment:"), incrementControls);
 
         incrementControls.getChildren().addAll(inc0, inc5, inc10);
 
     }
+
 
     private HBox chooseColor() {
 
@@ -292,13 +420,15 @@ public class Main extends Application {
         btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
 
         btnW.setOnAction(e -> {
-            selectedColor = model.coreData.Color.WHITE;
+            SoundManager.playSound("click");
+            selectedColor = com.easteurope.chess.model.coreData.Color.WHITE;
             btnW.setStyle("-fx-background-color: #ffffff;");
             btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
 
         btnB.setOnAction(e -> {
-            selectedColor = model.coreData.Color.BLACK;
+            SoundManager.playSound("click");
+            selectedColor = com.easteurope.chess.model.coreData.Color.BLACK;
             btnB.setStyle("-fx-background-color: #ffffff;");
             btnW.setStyle("-fx-background-color: #7f8c8d;");
         });
@@ -307,9 +437,59 @@ public class Main extends Application {
         return colorControl;
     }
 
+    // Setting Scene
+    private void showSettingsScene() {
+        VBox layout = new VBox(30);
+        layout.setAlignment(Pos.CENTER);
+        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #233447, #1b2838);");
 
+        Label title = new Label("SETTINGS");
+        title.setStyle("-fx-font-size: 48px; -fx-text-fill: white; -fx-font-weight: bold;");
 
+        Button backBtn = new Button("BACK TO MENU");
+        backBtn.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """);
 
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle("""
+                    -fx-background-color: white;
+                    -fx-text-fill: #233447;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """));
+
+        backBtn.setOnMouseExited(e -> backBtn.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """));
+
+        backBtn.setOnAction(e -> {
+            SoundManager.playSound("click");
+            showMenuScene();
+        });
+
+        layout.getChildren().addAll(title, backBtn);
+
+        Scene scene = new Scene(layout, 900, 700);
+        window.setScene(scene);
+    }
 
     // SCREEN 3: GAME BOARD
     private void showBoardScene() {
@@ -399,7 +579,7 @@ public class Main extends Application {
         timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), e -> {
 
-                    game.tickTimer();   // ⏱️ Zeit läuft wirklich
+                    game.tickTimer();   // time runs
 
                     whiteTimeLabel.setText(
                             "White: " + formatTime(game.getWhiteTimeMs())
@@ -410,6 +590,7 @@ public class Main extends Application {
 
                     if (game.isGameOver()) {
                         timeline.stop();
+                        SoundManager.playSound("defeat"); // Sound on time out
                     }
                 })
         );
@@ -429,8 +610,8 @@ public class Main extends Application {
         StringBuilder sb = new StringBuilder();
         int moveNumber = 1;
 
-        for (model.coreData.Move move : game.getMoveHistory()) {
-            if (move.movedPiece().getColor() == model.coreData.Color.WHITE) {
+        for (com.easteurope.chess.model.coreData.Move move : game.getMoveHistory()) {
+            if (move.movedPiece().getColor() == com.easteurope.chess.model.coreData.Color.WHITE) {
                 sb.append(moveNumber++).append(". ");
             }
 
@@ -462,8 +643,9 @@ public class Main extends Application {
     }
 
     private void handleTileClick(int row, int col, GridPane boardGui) {
-        // Since your Board logic (Row 0 = Black/Top) matches JavaFX (Row 0 = Top),
-        // we use the coordinates directly without flipping.
+        // ---Block input if Bot Turn ---
+        if (isBotTurn) return;
+
         Position clickedPos = new Position(row, col);
 
         System.out.println("Clicked: " + clickedPos.toAlgebraicNotation()); // Debugging
@@ -475,6 +657,7 @@ public class Main extends Application {
             // Only allow selecting pieces that belong to the current turn's player
             if (piece != null && piece.getColor() == game.getCurrentTurn()) {
                 selectedPosition = clickedPos;
+                SoundManager.playSound("start"); // --- Sound ---
                 System.out.println("Selected: " + clickedPos.toAlgebraicNotation());
                 possibleMoves.clear();
                 possibleMoves = piece.getValidMoves(game.getBoard());
@@ -491,15 +674,38 @@ public class Main extends Application {
                 return;
             }
 
+            // --- Detect Capture / Special Move Type BEFORE playing ---
+            Piece piece = game.getBoard().getPieceAt(selectedPosition);
+            Piece targetPiece = game.getBoard().getPieceAt(clickedPos);
+            boolean isCapture = (targetPiece != null);
+            boolean isCastle = (piece.getType() == PieceType.KING && Math.abs(selectedPosition.col() - clickedPos.col()) > 1);
+            boolean isPromotion = (piece.getType() == PieceType.PAWN && (clickedPos.row() == 0 || clickedPos.row() == 7));
+
             // Try to execute the move in the game logic
             boolean success = game.playTurn(selectedPosition, clickedPos);
             System.out.println("GameOver? " + game.isGameOver() + " status=" + game.getStatusMessage());
 
-            model.Piece piece = game.getBoard().getPieceAt(clickedPos);
             if (piece != null) {
                 possibleMoves = piece.getValidMoves(game.getBoard());
             }
             if (success) {
+                // --- Play Sound based on event ---
+                if (game.isGameOver()) {
+                    if (game.getStatusMessage().contains("Checkmate")) SoundManager.playSound("checkmate");
+                    else SoundManager.playSound("victory");
+                } else if (game.getStatusMessage().contains("check")) {
+                    SoundManager.playSound("check");
+                } else if (isCastle) {
+                    SoundManager.playSound("castle");
+                } else if (isPromotion) {
+                    SoundManager.playSound("promote");
+                } else if (isCapture) {
+                    SoundManager.playSound("capture");
+                } else {
+                    if (piece.getType() == PieceType.KNIGHT) SoundManager.playSound("knight_move");
+                    else SoundManager.playSound("move");
+                }
+
                 System.out.println("Move successful!");
                 possibleMoves.clear();
                 selectedPosition = null; // Reset selection after move
@@ -515,25 +721,81 @@ public class Main extends Application {
                     return; // Stop execution here
                 }
 
+                // --- Trigger Bot Move if applicable ---
+                if (selectedBotLevel > 0 && !game.isGameOver()) {
+                    makeBotMove(boardGui);
+                }
+
                 return; // Return here to avoid double-updating at the bottom
             } else {
-                System.out.println("Invalid move or selection switch");
-
-                // UX Feature: If the move failed but the user clicked on another OWN piece,
-                // switch selection to that new piece instead of just deselecting everything.
+                // ---Only play illegal sound if not switching selection ---
                 Piece clickedPiece = game.getBoard().getPieceAt(clickedPos);
                 if (clickedPiece != null && clickedPiece.getColor() == game.getCurrentTurn()) {
                     selectedPosition = clickedPos; // Switch selection
+                    SoundManager.playSound("start"); // --- Sound ---
                     System.out.println("Switched selection to: " + clickedPos.toAlgebraicNotation());
+                    // Re-calculate moves for the new selection
+                    possibleMoves.clear();
+                    possibleMoves = clickedPiece.getValidMoves(game.getBoard());
                 } else {
-                    selectedPosition = null; // Clicked empty space or enemy -> Deselect all
+                    SoundManager.playSound("illegal"); // --- Sound ---
+                    System.out.println("Invalid move");
+                    selectedPosition = null;
+                    possibleMoves.clear();
                 }
             }
             // Redraw board to reflect new positions or cleared selection
             updateBoard(boardGui);
-            possibleMoves.clear();
-
         }
+    }
+
+    // --- Bot Move Logic ---
+    private void makeBotMove(GridPane boardGui) {
+        isBotTurn = true; // Lock Input
+
+        new Thread(() -> {
+            try {
+                // Ensure toFEN() is implemented in Board.java!
+                String fen = game.getBoard().toFEN(game.getCurrentTurn(), null, 0, 1);
+
+                // Delay thinking based on difficulty (Level 1=fast, Level 4=slower)
+                String bestMove = bot.getRankedMove(fen, selectedBotLevel * 300, 1);
+
+                Platform.runLater(() -> {
+                    if (bestMove != null) {
+                        Position from = Position.fromAlgebraicNotation(bestMove.substring(0, 2));
+                        Position to = Position.fromAlgebraicNotation(bestMove.substring(2, 4));
+
+                        // Pre-calculate sound conditions for bot
+                        Piece piece = game.getBoard().getPieceAt(from);
+                        Piece target = game.getBoard().getPieceAt(to);
+                        boolean isCapture = (target != null);
+                        boolean isCastle = (piece.getType() == PieceType.KING && Math.abs(from.col() - to.col()) > 1);
+
+                        game.playTurn(from, to);
+
+                        // Play sound for bot move
+                        if (game.isGameOver()) SoundManager.playSound("defeat"); // Player lost
+                        else if (game.getStatusMessage().contains("check")) SoundManager.playSound("check");
+                        else if (isCastle) SoundManager.playSound("castle");
+                        else if (isCapture) SoundManager.playSound("capture");
+                        else SoundManager.playSound("move");
+
+                        updateBoard(boardGui);
+                        updateHistory();
+
+                        if (game.isGameOver()) {
+                            showGameOverDialog();
+                        }
+                    }
+                    isBotTurn = false; // Unlock Input
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                isBotTurn = false;
+            }
+        }).start();
     }
 
     private void showGameOverDialog() {
@@ -603,6 +865,7 @@ public class Main extends Application {
         }
     }
     private void togglePause() {
+        SoundManager.playSound("pause"); // --- Sound ---
         if (!isPaused) {
             isPaused = true;
             timeline.pause();
@@ -626,10 +889,12 @@ public class Main extends Application {
 
         btnContinue.setOnAction(e -> togglePause());
         btnRestart.setOnAction(e -> {
+            SoundManager.playSound("click");
             timeline.stop();
             showBoardScene();
         });
         btnMain.setOnAction(e -> {
+            SoundManager.playSound("click");
             timeline.stop();
             showMenuScene();
         });
