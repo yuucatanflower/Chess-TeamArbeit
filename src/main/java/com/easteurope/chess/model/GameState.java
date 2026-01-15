@@ -75,8 +75,6 @@ public class GameState {
             return false;
         }
 
-
-
         // Apply increment for the player who just moved
         if (currentTurn == Color.WHITE) {
             // White just moved, add increment to WHITE
@@ -118,6 +116,14 @@ public class GameState {
         boolean isFirstMove = !piece.hasMoved();
         Piece target = board.getPieceAt(to); // piece we MIGHT capture ( if not null or same color )
 
+        // If a pawn moves diagonally to an empty square, it is En Passant.
+        // Manually find the enemy pawn and remove it, because 'target' is currently null.
+        if (piece.getType() == PieceType.PAWN && from.col() != to.col() && target == null) {
+            Position enemyPawnPos = new Position(from.row(), to.col());
+            target = board.getPieceAt(enemyPawnPos); // We capture this piece
+            board.setPieceAt(enemyPawnPos, null);    // Remove it from the board
+        }
+
         board.executeMove(from, to);
 
         if (piece.getType() == PieceType.PAWN) {
@@ -133,6 +139,8 @@ public class GameState {
 
         Move moveRecord = new Move(piece, from, to, target, isFirstMove);
         moveHistory.push(moveRecord);
+
+        board.setLastMove(moveRecord);
 
         updateTimer();
         switchTurn();

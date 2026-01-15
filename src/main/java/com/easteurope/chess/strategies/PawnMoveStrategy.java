@@ -3,6 +3,8 @@ package com.easteurope.chess.strategies;
 import com.easteurope.chess.model.Board;
 import com.easteurope.chess.model.Piece;
 import com.easteurope.chess.model.coreData.Color;
+import com.easteurope.chess.model.coreData.Move;
+import com.easteurope.chess.model.coreData.PieceType;
 import com.easteurope.chess.model.coreData.Position;
 
 import java.util.ArrayList;
@@ -83,6 +85,29 @@ public class PawnMoveStrategy implements IMoveStrategy {
                 }
             }
         }
+
+        // en passant
+        Move lastMove = board.getLastMove();
+        if (lastMove != null) {
+            Piece lastPiece = lastMove.movedPiece();
+            Position lastFrom = lastMove.from();
+            Position lastTo = lastMove.to();
+
+            // 1. Was the last move a Pawn?
+            if (lastPiece.getType() == PieceType.PAWN) {
+                // 2. Did it move 2 steps? (Abs diff of rows is 2)
+                if (Math.abs(lastFrom.row() - lastTo.row()) == 2) {
+                    // 3. Is it sitting right next to *us* (same row, adjacent col)?
+                    if (lastTo.row() == currentPos.row() && Math.abs(lastTo.col() - currentPos.col()) == 1) {
+
+                        // 4. The target capture square is the one it skipped (midpoint)
+                        int captureRow = (lastFrom.row() + lastTo.row()) / 2;
+                        validMoves.add(new Position(captureRow, lastTo.col()));
+                    }
+                }
+            }
+        }
+
         return validMoves;
     }
 
