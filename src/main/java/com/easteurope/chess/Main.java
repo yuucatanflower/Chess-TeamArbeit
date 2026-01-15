@@ -538,7 +538,7 @@ public class Main extends Application {
         timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), e -> {
 
-                    game.tickTimer();   // ⏱️ Zeit läuft wirklich
+                    game.tickTimer();   // time runs
 
                     whiteTimeLabel.setText(
                             "White: " + formatTime(game.getWhiteTimeMs())
@@ -604,8 +604,6 @@ public class Main extends Application {
         // --- NEW: Block input if Bot Turn ---
         if (isBotTurn) return;
 
-        // Since your Board logic (Row 0 = Black/Top) matches JavaFX (Row 0 = Top),
-        // we use the coordinates directly without flipping.
         Position clickedPos = new Position(row, col);
 
         System.out.println("Clicked: " + clickedPos.toAlgebraicNotation()); // Debugging
