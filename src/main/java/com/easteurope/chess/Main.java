@@ -171,26 +171,26 @@ public class Main extends Application {
         VBox.setMargin(title, new Insets(0, 0, 30, 0));
 
         String btnStyle = """
-        -fx-background-color: transparent;
-        -fx-text-fill: white;
-        -fx-font-size: 24px;
-        -fx-padding: 8 24;
-        -fx-border-color: white;
-        -fx-border-width: 2;
-        -fx-border-radius: 6;
-        -fx-background-radius: 6;
-    """;
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """;
 
         String btnStyleHover = """
-        -fx-background-color: white;
-        -fx-text-fill: #233447;
-        -fx-font-size: 24px;
-        -fx-padding: 8 24;
-        -fx-border-color: white;
-        -fx-border-width: 2;
-        -fx-border-radius: 6;
-        -fx-background-radius: 6;
-    """;
+                    -fx-background-color: white;
+                    -fx-text-fill: #233447;
+                    -fx-font-size: 24px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """;
 
         Button playBtn = new Button("PLAY");
         Button settingsBtn = new Button("SETTINGS");
@@ -252,6 +252,22 @@ public class Main extends Application {
         Label title = new Label("Bot Selection + Time Control");
         title.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
 
+        // --- BACK BUTTON IN TOP-RIGHT  ---
+        Button backBtn = new Button("⮌");
+        backBtn.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 22px;
+                """);
+        backBtn.setOnAction(e -> showMenuScene());
+
+
+        HBox backBox = new HBox();
+        backBox.setAlignment(Pos.TOP_RIGHT);
+        backBox.getChildren().add(backBtn);
+
+
+        layout.getChildren().add(backBox);
         layout.getChildren().add(chooseColor());
 
         // --- Bot Selection Logic ---
@@ -270,7 +286,7 @@ public class Main extends Application {
             SoundManager.playSound("click");
             // Update styles
             pvpBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
-            for(Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            for (Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
         bots.getChildren().add(pvpBtn);
 
@@ -288,8 +304,8 @@ public class Main extends Application {
                 SoundManager.playSound("click");
                 // Update styles
                 pvpBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-                for(Button b : botButtons) {
-                    if(b == botBtn) b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                for (Button b : botButtons) {
+                    if (b == botBtn) b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
                     else b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
                 }
             });
@@ -305,9 +321,18 @@ public class Main extends Application {
         Button btn5 = new Button("5m");
         Button btn10 = new Button("10m");
 
-        btn1.setOnAction(e -> { selectedTimeMs = 60 * 1000; SoundManager.playSound("click"); });
-        btn5.setOnAction(e -> { selectedTimeMs = 5 * 60 * 1000; SoundManager.playSound("click"); });
-        btn10.setOnAction(e -> { selectedTimeMs = 10 * 60 * 1000; SoundManager.playSound("click"); });
+        btn1.setOnAction(e -> {
+            selectedTimeMs = 60 * 1000;
+            SoundManager.playSound("click");
+        });
+        btn5.setOnAction(e -> {
+            selectedTimeMs = 5 * 60 * 1000;
+            SoundManager.playSound("click");
+        });
+        btn10.setOnAction(e -> {
+            selectedTimeMs = 10 * 60 * 1000;
+            SoundManager.playSound("click");
+        });
 
         btn1.setStyle("-fx-background-color: #ffffff;");
         btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
@@ -891,6 +916,7 @@ public class Main extends Application {
             }
         }
     }
+
     private void togglePause() {
         SoundManager.playSound("pause"); // --- Sound ---
         if (!isPaused) {
@@ -903,6 +929,7 @@ public class Main extends Application {
             pauseOverlay.setVisible(false);
         }
     }
+
     private StackPane buildPauseOverlay() {
         StackPane overlay = new StackPane();
         overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
