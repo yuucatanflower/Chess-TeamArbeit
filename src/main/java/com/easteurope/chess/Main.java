@@ -610,15 +610,42 @@ public class Main extends Application {
         StringBuilder sb = new StringBuilder();
         int moveNumber = 1;
 
-        for (com.easteurope.chess.model.coreData.Move move : game.getMoveHistory()) {
-            if (move.movedPiece().getColor() == com.easteurope.chess.model.coreData.Color.WHITE) {
-                sb.append(moveNumber++).append(". ");
-            }
+        String whiteMove = null;
 
-            sb.append(move.from().toAlgebraicNotation())
-                    .append("-")
-                    .append(move.to().toAlgebraicNotation())
-                    .append("\n");
+        for (com.easteurope.chess.model.coreData.Move move : game.getMoveHistory()) {
+
+            String moveText =
+                    move.from().toAlgebraicNotation()
+                            + "-"
+                            + move.to().toAlgebraicNotation();
+
+            // WHITE move → start a new line
+            if (move.movedPiece().getColor()
+                    == com.easteurope.chess.model.coreData.Color.WHITE) {
+
+                whiteMove = moveText;
+
+                sb.append(String.format(
+                        "%2d. %-10s",
+                        moveNumber,
+                        whiteMove
+                ));
+            }
+            // BLACK move → same line, aligned
+            else {
+                sb.append(String.format(
+                        " %-10s%n",
+                        moveText
+                ));
+
+                moveNumber++;
+                whiteMove = null;
+            }
+        }
+
+        // If last move was only White (no Black yet)
+        if (whiteMove != null) {
+            sb.append("\n");
         }
 
         historyArea.setText(sb.toString());
