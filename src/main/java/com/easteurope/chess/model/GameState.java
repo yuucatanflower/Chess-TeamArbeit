@@ -75,15 +75,6 @@ public class GameState {
             return false;
         }
 
-        // Apply increment for the player who just moved
-        if (currentTurn == Color.WHITE) {
-            // White just moved, add increment to WHITE
-            whiteTimeMs += incrementMs;
-        } else {
-            // Black just moved, add increment to BLACK
-            blackTimeMs += incrementMs;
-        }
-
         Piece piece = board.getPieceAt(from);
 
         // --- CASTLING HANDLING ---
@@ -93,14 +84,37 @@ public class GameState {
             // Kingside castling (e1 -> g1 or e8 -> g8)
             if (from.equals(new Position(row, 4)) && to.equals(new Position(row, 6)) && canCastle(currentTurn, true)) {
                 executeCastling(currentTurn, true);
+
+                // Aplly increment to player who just moved
+                if (currentTurn == Color.WHITE) {
+                    whiteTimeMs += incrementMs;
+                } else {
+                    blackTimeMs += incrementMs;
+                }
+
+                // Restart timer after move is completed
+                lastMoveTimestamp = System.currentTimeMillis();
+
                 switchTurn();
+                updateGameStatus();
                 return true;
             }
 
             // Queenside castling (e1 -> c1 or e8 -> c8)
             if (from.equals(new Position(row, 4)) && to.equals(new Position(row, 2)) && canCastle(currentTurn, false)) {
                 executeCastling(currentTurn, false);
+
+                // Increment
+                if (currentTurn == Color.WHITE) {
+                    whiteTimeMs += incrementMs;
+                } else {
+                    blackTimeMs += incrementMs;
+                }
+
+                lastMoveTimestamp = System.currentTimeMillis();
+
                 switchTurn();
+                updateGameStatus();
                 return true;
             }
         }
@@ -142,10 +156,18 @@ public class GameState {
 
         board.setLastMove(moveRecord);
 
-        updateTimer();
+        if (currentTurn == Color.WHITE) {
+            whiteTimeMs += incrementMs;
+        } else {
+            blackTimeMs += incrementMs;
+        }
+
+        // Move finished, restart clock
+        lastMoveTimestamp = System.currentTimeMillis();
+
         switchTurn();
         updateGameStatus();
-        if (isGameOver) { return true; }
+
         return true;
     }
 
