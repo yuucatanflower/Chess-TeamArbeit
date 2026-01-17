@@ -1117,9 +1117,11 @@ public class Main extends Application {
         if (!isPaused) {
             isPaused = true;
             timeline.pause();
+            game.pause();
             pauseOverlay.setVisible(true);
         } else {
             isPaused = false;
+            game.resume();
             timeline.play();
             pauseOverlay.setVisible(false);
         }
