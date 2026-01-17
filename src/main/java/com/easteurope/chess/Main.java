@@ -245,12 +245,36 @@ public class Main extends Application {
     // SCREEN 2: GAME SETUP
     private void showSetupScene() {
         VBox layout = new VBox(30);
+
+        String titleStyle = "-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;";
+        String sectionStyle = "-fx-text-fill: white; -fx-font-size: 16px;";
+
+        String setupBtnStyle = """
+            -fx-background-color: #7f8c8d;
+            -fx-text-fill: white;
+            -fx-font-size: 14px;
+            -fx-pref-width: 70px;
+        """;
+
+        Button btn1 = new Button("1m");
+        Button btn5 = new Button("5m");
+        Button btn10 = new Button("10m");
+
+        Button startBtn = new Button("START");
+        startBtn.setPrefSize(120, 40);
+        startBtn.setStyle("""
+            -fx-background-color: #27ae60;
+            -fx-text-fill: white;
+            -fx-font-size: 16px;
+            -fx-font-weight: bold;
+        """);
+
         layout.setAlignment(Pos.CENTER);
         layout.setStyle("-fx-background-color: #34495e;");
         layout.setPadding(new Insets(20));
 
-        Label title = new Label("Bot Selection + Time Control");
-        title.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
+        Label title = new Label("Bot Selection");
+        title.setStyle(titleStyle);
 
         // --- BACK BUTTON IN TOP-RIGHT  ---
         Button backBtn = new Button("⮌");
@@ -317,23 +341,6 @@ public class Main extends Application {
         HBox timeControls = new HBox(20);
         timeControls.setAlignment(Pos.CENTER);
 
-        Button btn1 = new Button("1m");
-        Button btn5 = new Button("5m");
-        Button btn10 = new Button("10m");
-
-        btn1.setOnAction(e -> {
-            selectedTimeMs = 60 * 1000;
-            SoundManager.playSound("click");
-        });
-        btn5.setOnAction(e -> {
-            selectedTimeMs = 5 * 60 * 1000;
-            SoundManager.playSound("click");
-        });
-        btn10.setOnAction(e -> {
-            selectedTimeMs = 10 * 60 * 1000;
-            SoundManager.playSound("click");
-        });
-
         btn1.setStyle("-fx-background-color: #ffffff;");
         btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
@@ -365,10 +372,6 @@ public class Main extends Application {
 
         timeControls.getChildren().addAll(btn1, btn5, btn10);
 
-        Button startBtn = new Button("START");
-        startBtn.setPrefSize(120, 40);
-        startBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
-
         // --- Start Logic (Init Bot) ---
         startBtn.setOnAction(e -> {
             SoundManager.playSound("start");
@@ -385,9 +388,15 @@ public class Main extends Application {
             showBoardScene();
         });
 
-        layout.getChildren().addAll(title, bots, new Label("Select time control:"), timeControls, startBtn);
+        Label timeLabel = new Label("Time Control");
+        timeLabel.setStyle(sectionStyle);
 
-        window.setScene(new Scene(layout, 800, 600));
+        layout.getChildren().addAll(
+                title,
+                bots,
+                timeLabel,
+                timeControls
+        );
 
         // increments
         HBox incrementControls = new HBox(20);
@@ -426,9 +435,20 @@ public class Main extends Application {
         });
 
 
-        layout.getChildren().addAll(new Label("Select increment:"), incrementControls);
+        Label incrementLabel = new Label("Increment");
+        incrementLabel.setStyle(sectionStyle);
 
         incrementControls.getChildren().addAll(inc0, inc5, inc10);
+
+        layout.getChildren().addAll(
+                incrementLabel,
+                incrementControls,
+                startBtn
+        );
+
+        window.setScene(new Scene(layout, 800, 600));
+
+        VBox.setMargin(startBtn, new Insets(20, 0, 0, 0));
 
     }
 
