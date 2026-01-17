@@ -478,7 +478,44 @@ public class Main extends Application {
     private void showBoardScene() {
         game = new GameState(selectedTimeMs, selectedColor, selectedIncrementMs);
 
-        // --- 1. SETUP BOARD ---
+        // --- 1. LOAD FONT & DEFINE STYLES ---
+        Font customFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 28);
+        String fontFamily = (customFont != null) ? customFont.getFamily() : "Arial";
+
+        // Style for Timers
+        String timerStyle = """
+            -fx-text-fill: white; 
+            -fx-font-family: "%s"; 
+            -fx-font-size: 32px;
+        """.formatted(fontFamily);
+
+        // Style for Pause Button (Matches Menu Buttons)
+        String pauseBtnStyle = """
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-family: "%s";
+                    -fx-font-size: 24px;
+                    -fx-padding: 10 10;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """.formatted(fontFamily);
+
+        String pauseBtnHoverStyle = """
+                    -fx-background-color: white;
+                    -fx-text-fill: #233447;
+                    -fx-font-family: "%s";
+                    -fx-font-size: 24px;
+                    -fx-padding: 10 10;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """.formatted(fontFamily);
+
+
+        // --- 2. SETUP BOARD ---
         StackPane boardStack = new StackPane();
         GridPane boardGui = new GridPane();
         boardGui.setAlignment(Pos.CENTER);
@@ -491,15 +528,68 @@ public class Main extends Application {
         boardStack.getChildren().addAll(boardGui, inputGrid);
         updateBoard(boardGui);
 
-        // --- 2. SETUP SIDEBAR (RIGHT) ---
+        // --- 3. SETUP TIMERS (Left of Board) ---
+        whiteTimeLabel = new Label();
+        blackTimeLabel = new Label();
+
+        // Showing only time
+        whiteTimeLabel.setText(formatTime(game.getWhiteTimeMs()));
+        blackTimeLabel.setText(formatTime(game.getBlackTimeMs()));
+
+        whiteTimeLabel.setStyle(timerStyle);
+        blackTimeLabel.setStyle(timerStyle);
+
+        // Vertical Box for Timers
+        VBox timerBox = new VBox();
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS); // Push White timer to bottom
+
+        timerBox.getChildren().addAll(blackTimeLabel, spacer, whiteTimeLabel);
+
+        // Height = 480 (Matches Board Height)
+        timerBox.setPrefHeight(480);
+        timerBox.setMaxHeight(480);
+
+        timerBox.setMinWidth(150);
+        timerBox.setPrefWidth(150);
+
+        // Align text to the RIGHT of this box
+        timerBox.setAlignment(Pos.TOP_RIGHT);
+        timerBox.setPadding(new Insets(0, 30, 0, 0));
+
+
+        // --- 4. CENTER AREA (Timers + Board) ---
+        HBox centerContent = new HBox();
+        centerContent.setAlignment(Pos.CENTER);
+        centerContent.getChildren().addAll(timerBox, boardStack);
+
+
+        // --- 5. PAUSE BUTTON (Top Left) ---
+        Button pauseBtn = new Button(" II ");
+        pauseBtn.setStyle(pauseBtnStyle);
+
+        // Hover Effects
+        pauseBtn.setOnMouseEntered(e -> pauseBtn.setStyle(pauseBtnHoverStyle));
+        pauseBtn.setOnMouseExited(e -> pauseBtn.setStyle(pauseBtnStyle));
+
+        pauseBtn.setOnAction(e -> togglePause());
+
+        // Place in StackPane
+        StackPane topBar = new StackPane(pauseBtn);
+
+        // --- Top Left Alignment ---
+        topBar.setAlignment(Pos.TOP_LEFT);
+
+        // ---Equal Padding from all sides (Top/Left corner margin) ---
+        topBar.setPadding(new Insets(20));
+
+
+        // --- 6. SIDEBAR (Right) ---
         historyArea = new TextArea();
         historyArea.setEditable(false);
-
-        // FIX: Increased height to fill vertical space and avoid scrollbar
         historyArea.setPrefHeight(600);
         historyArea.setWrapText(true);
 
-        // --- Transparent Style ---
         historyArea.setStyle("""
                     -fx-control-inner-background: transparent;
                     -fx-background-color: transparent;
@@ -517,54 +607,28 @@ public class Main extends Application {
 
         VBox sidebar = new VBox(10);
         sidebar.setPadding(new Insets(10, 15, 10, 15));
-        sidebar.setPrefWidth(300); // Slightly wider
-        sidebar.setStyle("-fx-background-color: rgba(0, 0, 0, 0.2);"); // Slightly darker for visibility
+        sidebar.setPrefWidth(300);
+        sidebar.setStyle("-fx-background-color: rgba(0, 0, 0, 0.2);");
         sidebar.setAlignment(Pos.TOP_CENTER);
 
-        Label historyLabel = new Label(""); // Spacer label or title
+        Label historyLabel = new Label("");
         historyLabel.setTextFill(Color.WHITE);
-        historyLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
 
         sidebar.getChildren().addAll(historyLabel, historyArea);
-
         VBox.setVgrow(historyArea, Priority.ALWAYS);
 
 
-        // --- 3. SETUP TOP BAR (TIMERS) ---
-        HBox topBar = new HBox(100);
-        topBar.setAlignment(Pos.CENTER);
-        topBar.setPadding(new Insets(10));
+        // --- 7. LAYOUT COMPOSITION ---
 
-        whiteTimeLabel = new Label();
-        blackTimeLabel = new Label();
+        BorderPane gameLayout = new BorderPane();
+        gameLayout.setTop(topBar);
+        gameLayout.setCenter(centerContent);
 
-        whiteTimeLabel.setText("White: " + formatTime(game.getWhiteTimeMs()));
-        blackTimeLabel.setText("Black: " + formatTime(game.getBlackTimeMs()));
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setStyle("-fx-background-color: transparent;");
 
-        whiteTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-        blackTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-
-        topBar.getChildren().addAll(blackTimeLabel, whiteTimeLabel);
-
-        Button pauseBtn = new Button("≡");
-        pauseBtn.setOnAction(e -> togglePause());
-        pauseBtn.setStyle("-fx-font-size: 18px; -fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        topBar.getChildren().add(pauseBtn);
-
-
-        // --- 4. LAYOUT COMPOSITION  ---
-        // Inner Pane: Holds Timers (Top) and Board (Center)
-        // This keeps the timers above the board.
-        BorderPane gameArea = new BorderPane();
-        gameArea.setTop(topBar);
-        gameArea.setCenter(boardStack);
-
-        // Outer Pane: Holds Sidebar (Right) and gameArea (Center)
-        BorderPane uiLayout = new BorderPane();
-        uiLayout.setStyle("-fx-background-color: transparent;");
-
-        uiLayout.setCenter(gameArea);
-        uiLayout.setRight(sidebar);
+        mainLayout.setCenter(gameLayout);
+        mainLayout.setRight(sidebar);
 
 
         // --- FINAL ASSEMBLY ---
@@ -574,9 +638,9 @@ public class Main extends Application {
         Pane animatedBg = BackgroundEffect.createAnimatedBackground();
         StackPane root = new StackPane();
 
-        root.getChildren().add(animatedBg);   // Bottom: Animation
-        root.getChildren().add(uiLayout);     // Middle: Game UI (Nested BorderPanes)
-        root.getChildren().add(pauseOverlay); // Top: Pause Menu
+        root.getChildren().add(animatedBg);
+        root.getChildren().add(mainLayout);
+        root.getChildren().add(pauseOverlay);
 
         window.getScene().setRoot(root);
         window.getScene().setOnKeyPressed(e -> {
@@ -589,8 +653,8 @@ public class Main extends Application {
         timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), e -> {
                     game.tickTimer();
-                    whiteTimeLabel.setText("White: " + formatTime(game.getWhiteTimeMs()));
-                    blackTimeLabel.setText("Black: " + formatTime(game.getBlackTimeMs()));
+                    whiteTimeLabel.setText(formatTime(game.getWhiteTimeMs()));
+                    blackTimeLabel.setText(formatTime(game.getBlackTimeMs()));
 
                     if (game.isGameOver()) {
                         timeline.stop();
