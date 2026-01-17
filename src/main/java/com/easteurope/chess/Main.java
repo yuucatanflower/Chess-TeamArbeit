@@ -914,8 +914,23 @@ public class Main extends Application {
                 // Ensure toFEN() is implemented in Board.java!
                 String fen = game.getBoard().toFEN(game.getCurrentTurn(), null, 0, 1);
 
-                // Delay thinking based on difficulty (Level 1=fast, Level 4=slower)
-                String bestMove = bot.getRankedMove(fen, selectedBotLevel * 300, 1);
+                // --- Bot Skill Levels ---
+                // Level 1: Weak (Rank 7)
+                // Level 2: Medium (Rank 5)
+                // Level 3: Strong (Rank 3, fast)
+                // Level 4: Expert (Rank 1, thought out)
+
+                int rank = 1; // Default to best move
+                long thinkTime = 1000; // Default 1 second
+
+                switch (selectedBotLevel) {
+                    case 1 -> { rank = 7; thinkTime = 100; }
+                    case 2 -> { rank = 5; thinkTime = 500; }
+                    case 3 -> { rank = 3; thinkTime = 800; }
+                    case 4 -> { rank = 1; thinkTime = 2000; }
+                }
+
+                String bestMove = bot.getRankedMove(fen, (int)thinkTime, rank);
 
                 Platform.runLater(() -> {
                     if (bestMove != null) {
@@ -953,6 +968,7 @@ public class Main extends Application {
             }
         }).start();
     }
+
 
     private void showGameOverDialog() {
         javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
