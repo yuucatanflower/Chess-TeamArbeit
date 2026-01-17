@@ -4,7 +4,7 @@ import com.easteurope.chess.controller.Stockfish;
 import com.easteurope.chess.model.Piece;
 import com.easteurope.chess.view.BackgroundEffect;
 import com.easteurope.chess.view.ImageLoader;
-import com.easteurope.chess.view.SoundManager; // Added SoundManager import
+import com.easteurope.chess.view.SoundManager;
 import javafx.animation.*;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -13,7 +13,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Slider; // Added Slider import
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -27,9 +27,6 @@ import com.easteurope.chess.model.GameState;
 import com.easteurope.chess.model.coreData.Position;
 import com.easteurope.chess.model.coreData.PieceType;
 
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.util.Duration;
 
 import java.util.Scanner;
@@ -176,21 +173,17 @@ public class Main extends Application {
 
 
         // Create Up/Down Hover Animation
-        // Duration specifies how long one direction takes (e.g., 2.5 seconds up)
         TranslateTransition hoverAnimation = new TranslateTransition(Duration.seconds(2.5), logoImageView);
         hoverAnimation.setFromY(12); // Start slightly below center
         hoverAnimation.setToY(-12);  // Move to slightly above center
         hoverAnimation.setCycleCount(TranslateTransition.INDEFINITE); // Repeat forever
         hoverAnimation.setAutoReverse(true); // Go back down after going up
-        // EASE_BOTH makes the movement smoother at the turnaround points
         hoverAnimation.setInterpolator(Interpolator.EASE_BOTH);
         hoverAnimation.play();
 
         VBox.setMargin(logoImageView, new Insets(0, 0, 30, 0));
 
         Font customFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 28);
-
-        // getting the family name ensures we use the correct name in CSS (e.g., "RetroByte")
         String fontFamily = (customFont != null) ? customFont.getFamily() : "Arial";
 
         String btnStyle = """
@@ -213,7 +206,6 @@ public class Main extends Application {
         settingsBtn.setStyle(btnStyle);
         exitBtn.setStyle(btnStyle);
 
-        // ---  Sound on Click ---
         playBtn.setOnMouseEntered(e -> playBtn.setStyle(btnStyle));
         playBtn.setOnMouseExited(e -> playBtn.setStyle(btnStyle));
 
@@ -233,23 +225,11 @@ public class Main extends Application {
             window.close();
         });
 
-        // --- Music Toggle Button ---
-        Button musicBtn = new Button("MUSIC: ON");
-        musicBtn.setStyle(btnStyle);
-        musicBtn.setOnAction(e -> {
-            SoundManager.toggleMusic();
-            SoundManager.playSound("click");
-            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
-        });
-        musicBtn.setOnMouseEntered(e -> musicBtn.setStyle(btnStyle));
-        musicBtn.setOnMouseExited(e -> musicBtn.setStyle(btnStyle));
-
         settingsBtn.setOnAction(e -> {
             SoundManager.playSound("click");
             showSettingsScene();
         });
 
-        // 1. Add the buttons to the VBox (Removed Music Btn from here)
         content.getChildren().addAll(logoImageView, playBtn, settingsBtn, exitBtn);
 
         Pane animatedBg = BackgroundEffect.createAnimatedBackground();
@@ -266,13 +246,6 @@ public class Main extends Application {
 
         String titleStyle = "-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;";
         String sectionStyle = "-fx-text-fill: white; -fx-font-size: 16px;";
-
-        String setupBtnStyle = """
-                    -fx-background-color: #7f8c8d;
-                    -fx-text-fill: white;
-                    -fx-font-size: 14px;
-                    -fx-pref-width: 70px;
-                """;
 
         Button btn1 = new Button("1m");
         Button btn5 = new Button("5m");
@@ -306,7 +279,6 @@ public class Main extends Application {
         Label title = new Label("Bot Selection");
         title.setStyle(titleStyle);
 
-        // --- BACK BUTTON IN TOP-RIGHT  ---
         Button backBtn = new Button("⮌");
         backBtn.setStyle("""
                     -fx-background-color: transparent;
@@ -315,16 +287,13 @@ public class Main extends Application {
                 """);
         backBtn.setOnAction(e -> showMenuScene());
 
-
         HBox backBox = new HBox();
         backBox.setAlignment(Pos.TOP_RIGHT);
         backBox.getChildren().add(backBtn);
 
-
         layout.getChildren().add(backBox);
         layout.getChildren().add(chooseColor());
 
-        // --- Bot Selection Logic ---
         HBox bots = new HBox(20);
         bots.setAlignment(Pos.CENTER);
 
@@ -332,17 +301,15 @@ public class Main extends Application {
 
         Button pvpBtn = new Button("PvP");
         pvpBtn.setPrefSize(80, 80);
-        pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;"); // Default selected
+        pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
         pvpBtn.setOnAction(e -> {
             selectedBotLevel = 0;
             SoundManager.playSound("click");
-            // Update styles
             pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
             for (Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
         bots.getChildren().add(pvpBtn);
 
-        // Bot Buttons (1-4)
         for (int i = 1; i <= 4; i++) {
             final int level = i;
             Button botBtn = new Button("BOT " + i);
@@ -353,7 +320,6 @@ public class Main extends Application {
             botBtn.setOnAction(e -> {
                 selectedBotLevel = level;
                 SoundManager.playSound("click");
-                // Update styles
                 pvpBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
                 for (Button b : botButtons) {
                     if (b == botBtn) b.setStyle("-fx-background-color: #124373; -fx-text-fill: white;");
@@ -363,12 +329,11 @@ public class Main extends Application {
 
             bots.getChildren().add(botBtn);
         }
-        layout.getChildren().add(bots); // ADD THE BOTS CONTAINER TO LAYOUT
+        layout.getChildren().add(bots);
 
-        // Time Setting
         Label timeLabel = new Label("Time Control");
         timeLabel.setStyle(sectionStyle);
-        layout.getChildren().add(timeLabel); // ADD LABEL
+        layout.getChildren().add(timeLabel);
 
         HBox timeControls = new HBox(20);
         timeControls.setAlignment(Pos.CENTER);
@@ -401,11 +366,9 @@ public class Main extends Application {
             btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
 
-
         timeControls.getChildren().addAll(btn1, btn5, btn10);
-        layout.getChildren().add(timeControls); // ADD TIME CONTROLS
+        layout.getChildren().add(timeControls);
 
-        // Increments
         Label incLabel = new Label("Increment");
         incLabel.setStyle(sectionStyle);
         layout.getChildren().add(incLabel);
@@ -446,25 +409,23 @@ public class Main extends Application {
         });
 
         incrementControls.getChildren().addAll(inc0, inc5, inc10);
-        layout.getChildren().add(incrementControls); // ADD INCREMENTS
+        layout.getChildren().add(incrementControls);
 
-        // --- Start Logic (Init Bot) ---
         startBtn.setOnAction(e -> {
             SoundManager.playSound("start");
-            // Initialize Bot if selected
             if (selectedBotLevel > 0) {
                 bot = new Stockfish();
                 if (bot.startEngine()) {
                     System.out.println("Engine Started. Level: " + selectedBotLevel);
                 } else {
                     System.out.println("Engine Failed.");
-                    selectedBotLevel = 0; // Fallback
+                    selectedBotLevel = 0;
                 }
             }
             showBoardScene();
         });
 
-        layout.getChildren().add(startBtn); // ADD START BUTTON
+        layout.getChildren().add(startBtn);
 
         Pane animatedBg = BackgroundEffect.createAnimatedBackground();
         StackPane root = new StackPane();
@@ -478,18 +439,24 @@ public class Main extends Application {
     private void showBoardScene() {
         game = new GameState(selectedTimeMs, selectedColor, selectedIncrementMs);
 
-        // --- 1. LOAD FONT & DEFINE STYLES ---
-        Font customFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 28);
-        String fontFamily = (customFont != null) ? customFont.getFamily() : "Arial";
+        // --- LOAD FONTS  ---
+
+        // Font 1: RetroByte (For Pause Button) - Size 24
+        Font retroFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 24);
+        String retroFamily = (retroFont != null) ? retroFont.getFamily() : "Arial";
+
+        // Font 2: Minecraftia-Regular (For Timers) - Size 26
+        Font mineFont = Font.loadFont(getClass().getResourceAsStream("/Minecraftia-Regular.ttf"), 26);
+        String mineFamily = (mineFont != null) ? mineFont.getFamily() : "Verdana";
 
         // Style for Timers
         String timerStyle = """
             -fx-text-fill: white; 
             -fx-font-family: "%s"; 
-            -fx-font-size: 32px;
-        """.formatted(fontFamily);
+            -fx-font-size: 26px;
+        """.formatted(mineFamily);
 
-        // Style for Pause Button (Matches Menu Buttons)
+        // Style for Pause Button
         String pauseBtnStyle = """
                     -fx-background-color: transparent;
                     -fx-text-fill: white;
@@ -500,7 +467,7 @@ public class Main extends Application {
                     -fx-border-width: 2;
                     -fx-border-radius: 6;
                     -fx-background-radius: 6;
-                """.formatted(fontFamily);
+                """.formatted(retroFamily);
 
         String pauseBtnHoverStyle = """
                     -fx-background-color: white;
@@ -512,7 +479,7 @@ public class Main extends Application {
                     -fx-border-width: 2;
                     -fx-border-radius: 6;
                     -fx-background-radius: 6;
-                """.formatted(fontFamily);
+                """.formatted(retroFamily);
 
 
         // --- 2. SETUP BOARD ---
@@ -532,7 +499,6 @@ public class Main extends Application {
         whiteTimeLabel = new Label();
         blackTimeLabel = new Label();
 
-        // Showing only time
         whiteTimeLabel.setText(formatTime(game.getWhiteTimeMs()));
         blackTimeLabel.setText(formatTime(game.getBlackTimeMs()));
 
@@ -542,23 +508,21 @@ public class Main extends Application {
         // Vertical Box for Timers
         VBox timerBox = new VBox();
         Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS); // Push White timer to bottom
+        VBox.setVgrow(spacer, Priority.ALWAYS);
 
         timerBox.getChildren().addAll(blackTimeLabel, spacer, whiteTimeLabel);
 
-        // Height = 480 (Matches Board Height)
-        timerBox.setPrefHeight(480);
-        timerBox.setMaxHeight(480);
+        timerBox.setPrefHeight(600);
+        timerBox.setMaxHeight(600);
 
         timerBox.setMinWidth(150);
         timerBox.setPrefWidth(150);
 
-        // Align text to the RIGHT of this box
         timerBox.setAlignment(Pos.TOP_RIGHT);
         timerBox.setPadding(new Insets(0, 30, 0, 0));
 
 
-        // --- 4. CENTER AREA (Timers + Board) ---
+        // --- 4. CENTER AREA ---
         HBox centerContent = new HBox();
         centerContent.setAlignment(Pos.CENTER);
         centerContent.getChildren().addAll(timerBox, boardStack);
@@ -568,20 +532,14 @@ public class Main extends Application {
         Button pauseBtn = new Button(" II ");
         pauseBtn.setStyle(pauseBtnStyle);
 
-        // Hover Effects
         pauseBtn.setOnMouseEntered(e -> pauseBtn.setStyle(pauseBtnHoverStyle));
         pauseBtn.setOnMouseExited(e -> pauseBtn.setStyle(pauseBtnStyle));
 
         pauseBtn.setOnAction(e -> togglePause());
 
-        // Place in StackPane
         StackPane topBar = new StackPane(pauseBtn);
-
-        // --- Top Left Alignment ---
         topBar.setAlignment(Pos.TOP_LEFT);
-
-        // ---Equal Padding from all sides (Top/Left corner margin) ---
-        topBar.setPadding(new Insets(20));
+        topBar.setPadding(new Insets(10));
 
 
         // --- 6. SIDEBAR (Right) ---
@@ -619,7 +577,6 @@ public class Main extends Application {
 
 
         // --- 7. LAYOUT COMPOSITION ---
-
         BorderPane gameLayout = new BorderPane();
         gameLayout.setTop(topBar);
         gameLayout.setCenter(centerContent);
@@ -667,6 +624,81 @@ public class Main extends Application {
         timeline.play();
     }
 
+    private void updateBoard(GridPane boardGui) {
+        boardGui.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        boardGui.setAlignment(Pos.CENTER);
+        boardGui.setHgap(0);
+        boardGui.setVgap(0);
+        boardGui.setStyle("-fx-border-color: black; -fx-border-width: 5; -fx-border-style: solid;");
+
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.rgb(0, 0, 0, 0.6));
+        shadow.setRadius(70);
+        shadow.setSpread(0.4);
+        shadow.setOffsetX(10);
+        shadow.setOffsetY(10);
+        boardGui.setEffect(shadow);
+
+        boardGui.getChildren().clear();
+
+        int tileSize = 75;
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                StackPane tile = new StackPane();
+                tile.setPrefSize(tileSize, tileSize);
+
+                boolean isLight = (row + col) % 2 == 0;
+
+                ImageView backgroundSprite = ImageLoader.getBoardTile(isLight);
+                backgroundSprite.setFitWidth(tileSize);
+                backgroundSprite.setFitHeight(tileSize);
+                tile.getChildren().add(backgroundSprite);
+
+                Position currentPos = new Position(row, col);
+                if (selectedPosition != null && selectedPosition.equals(currentPos)) {
+                    Rectangle highlight = new Rectangle(tileSize, tileSize, Color.rgb(255, 0, 222, 0.4));
+                    tile.getChildren().add(highlight);
+                }
+                if (possibleMoves.contains(currentPos)) {
+                    Rectangle moveHighlight = new Rectangle(tileSize, tileSize, Color.rgb(255, 0, 222, 0.25));
+                    tile.getChildren().add(moveHighlight);
+                }
+
+                Piece piece = game.getBoard().getPieceAt(currentPos);
+                if (piece != null) {
+                    ImageView pieceSprite = ImageLoader.getPieceSprite(piece.getType(), piece.getColor());
+                    pieceSprite.setManaged(false);
+
+                    pieceSprite.setFitWidth(tileSize);
+                    pieceSprite.setPreserveRatio(true);
+
+                    pieceSprite.setLayoutX(0);
+                    pieceSprite.setLayoutY(-125);
+
+                    tile.getChildren().add(pieceSprite);
+                }
+
+                boardGui.add(tile, col, row);
+            }
+        }
+    }
+
+    private void setupInputLayer(GridPane inputGrid, GridPane boardGui) {
+        // CHANGED: Match input layer to visual tile size (75)
+        int tileSize = 75;
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Rectangle clickArea = new Rectangle(tileSize, tileSize, Color.TRANSPARENT);
+                final int r = row;
+                final int c = col;
+                clickArea.setOnMouseClicked(e -> handleTileClick(r, c, boardGui));
+                inputGrid.add(clickArea, col, row);
+            }
+        }
+    }
+
     private HBox chooseColor() {
 
         HBox colorControl = new HBox(30);
@@ -696,18 +728,14 @@ public class Main extends Application {
         return colorControl;
     }
 
-    // Setting Scene (UPDATED)
     private void showSettingsScene() {
         VBox content = new VBox(30);
         content.setAlignment(Pos.CENTER);
 
         Font customFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 28);
-
-        // getting the family name ensures we use the correct name in CSS (e.g., "RetroByte")
         String fontFamily = (customFont != null) ? customFont.getFamily() : "Arial";
 
         Label title = new Label("SETTINGS");
-
         title.setStyle("""
                     -fx-font-family: "%s";
                     -fx-font-size: 64px;
@@ -715,21 +743,18 @@ public class Main extends Application {
                     -fx-font-weight: bold;
                 """.formatted(fontFamily));
 
-        // --- NEW: Volume Sliders ---
         VBox volumeBox = new VBox(20);
         volumeBox.setAlignment(Pos.CENTER);
         volumeBox.setPadding(new Insets(20));
         volumeBox.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); -fx-background-radius: 10;");
         volumeBox.setMaxWidth(400);
 
-        // Styling string for sliders
         String sliderStyle = """
                 -fx-control-inner-background: #7f8c8d; 
                 -fx-background-color: transparent, #2c3e50, transparent;
                 -fx-color: #124373;
                 """;
 
-        // Master Volume
         Label masterLabel = new Label("Master Volume");
         masterLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
         Slider masterSlider = new Slider(0, 100, SoundManager.getMasterVolume() * 100);
@@ -740,7 +765,6 @@ public class Main extends Application {
             SoundManager.setMasterVolume(newVal.doubleValue() / 100.0);
         });
 
-        // Music Volume
         Label musicLabel = new Label("Music Volume");
         musicLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
         Slider musicSlider = new Slider(0, 100, SoundManager.getMusicVolume() * 100);
@@ -763,7 +787,6 @@ public class Main extends Application {
                     -fx-background-radius: 6;
                 """.formatted(fontFamily);
 
-        // Music Toggle (Moved from Menu)
         Button musicBtn = new Button(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
         musicBtn.setStyle(btnStyle);
         musicBtn.setOnAction(e -> {
@@ -776,7 +799,6 @@ public class Main extends Application {
 
         volumeBox.getChildren().addAll(masterLabel, masterSlider, musicLabel, musicSlider, musicBtn);
 
-        // Back Button
         Button backBtn = new Button("BACK TO MENU");
         backBtn.setStyle(btnStyle);
 
@@ -815,7 +837,6 @@ public class Main extends Application {
                             + "-"
                             + move.to().toAlgebraicNotation();
 
-            // WHITE move → start a new line
             if (move.movedPiece().getColor()
                     == com.easteurope.chess.model.coreData.Color.WHITE) {
 
@@ -827,7 +848,6 @@ public class Main extends Application {
                         whiteMove
                 ));
             }
-            // BLACK move → same line, aligned
             else {
                 sb.append(String.format(
                         " %-10s%n",
@@ -839,7 +859,6 @@ public class Main extends Application {
             }
         }
 
-        // If last move was only White (no Black yet)
         if (whiteMove != null) {
             sb.append("\n");
         }
@@ -847,49 +866,26 @@ public class Main extends Application {
         historyArea.setText(sb.toString());
     }
 
-    // Builds the invisible grid for click detection
-    private void setupInputLayer(GridPane inputGrid, GridPane boardGui) {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                // Create an invisible rectangle as the "click target"
-                Rectangle clickArea = new Rectangle(60, 60, Color.TRANSPARENT);
-
-                final int r = row;
-                final int c = col;
-
-                // The click triggers the logic and then updates the visual layer (boardGui)
-                clickArea.setOnMouseClicked(e -> handleTileClick(r, c, boardGui));
-
-                inputGrid.add(clickArea, col, row);
-            }
-        }
-    }
-
     private void handleTileClick(int row, int col, GridPane boardGui) {
-        // ---Block input if Bot Turn ---
         if (isBotTurn) return;
 
         Position clickedPos = new Position(row, col);
 
-        System.out.println("Clicked: " + clickedPos.toAlgebraicNotation()); // Debugging
+        System.out.println("Clicked: " + clickedPos.toAlgebraicNotation());
 
-        // CASE 1: Select a piece (First Click)
         if (selectedPosition == null) {
             Piece piece = game.getBoard().getPieceAt(clickedPos);
 
-            // Only allow selecting pieces that belong to the current turn's player
             if (piece != null && piece.getColor() == game.getCurrentTurn()) {
                 selectedPosition = clickedPos;
-                SoundManager.playSound("start"); // --- Sound ---
+                SoundManager.playSound("start");
                 System.out.println("Selected: " + clickedPos.toAlgebraicNotation());
                 possibleMoves.clear();
                 possibleMoves = piece.getValidMoves(game.getBoard());
-                updateBoard(boardGui); // Redraw to show highlight
+                updateBoard(boardGui);
             }
         }
-        // CASE 2: Move or Change Selection (Second Click)
         else {
-            // If clicking the same tile again -> Deselect
             if (clickedPos.equals(selectedPosition)) {
                 selectedPosition = null;
                 possibleMoves.clear();
@@ -897,14 +893,12 @@ public class Main extends Application {
                 return;
             }
 
-            // --- Detect Capture / Special Move Type BEFORE playing ---
             Piece piece = game.getBoard().getPieceAt(selectedPosition);
             Piece targetPiece = game.getBoard().getPieceAt(clickedPos);
             boolean isCapture = (targetPiece != null);
             boolean isCastle = (piece.getType() == PieceType.KING && Math.abs(selectedPosition.col() - clickedPos.col()) > 1);
             boolean isPromotion = (piece.getType() == PieceType.PAWN && (clickedPos.row() == 0 || clickedPos.row() == 7));
 
-            // Try to execute the move in the game logic
             boolean success = game.playTurn(selectedPosition, clickedPos);
             System.out.println("GameOver? " + game.isGameOver() + " status=" + game.getStatusMessage());
 
@@ -912,7 +906,6 @@ public class Main extends Application {
                 possibleMoves = piece.getValidMoves(game.getBoard());
             }
             if (success) {
-                // --- Play Sound based on event ---
                 if (game.isGameOver()) {
                     if (game.getStatusMessage().contains("Checkmate")) SoundManager.playSound("checkmate");
                     else SoundManager.playSound("victory");
@@ -931,64 +924,50 @@ public class Main extends Application {
 
                 System.out.println("Move successful!");
                 possibleMoves.clear();
-                selectedPosition = null; // Reset selection after move
+                selectedPosition = null;
 
-                // 1. Update the board immediately so the user sees the final move
                 updateBoard(boardGui);
 
                 updateHistory();
 
-                // 2. Check if the game is over
                 if (game.isGameOver()) {
-                    showGameOverDialog(); // Shows the popup
-                    return; // Stop execution here
+                    showGameOverDialog();
+                    return;
                 }
 
-                // --- Trigger Bot Move if applicable ---
                 if (selectedBotLevel > 0 && !game.isGameOver()) {
                     makeBotMove(boardGui);
                 }
 
-                return; // Return here to avoid double-updating at the bottom
+                return;
             } else {
-                // ---Only play illegal sound if not switching selection ---
                 Piece clickedPiece = game.getBoard().getPieceAt(clickedPos);
                 if (clickedPiece != null && clickedPiece.getColor() == game.getCurrentTurn()) {
-                    selectedPosition = clickedPos; // Switch selection
-                    SoundManager.playSound("start"); // --- Sound ---
+                    selectedPosition = clickedPos;
+                    SoundManager.playSound("start");
                     System.out.println("Switched selection to: " + clickedPos.toAlgebraicNotation());
-                    // Re-calculate moves for the new selection
                     possibleMoves.clear();
                     possibleMoves = clickedPiece.getValidMoves(game.getBoard());
                 } else {
-                    SoundManager.playSound("illegal"); // --- Sound ---
+                    SoundManager.playSound("illegal");
                     System.out.println("Invalid move");
                     selectedPosition = null;
                     possibleMoves.clear();
                 }
             }
-            // Redraw board to reflect new positions or cleared selection
             updateBoard(boardGui);
         }
     }
 
-    // --- Bot Move Logic ---
     private void makeBotMove(GridPane boardGui) {
-        isBotTurn = true; // Lock Input
+        isBotTurn = true;
 
         new Thread(() -> {
             try {
-                // Ensure toFEN() is implemented in Board.java!
                 String fen = game.getBoard().toFEN(game.getCurrentTurn(), null, 0, 1);
 
-                // --- Bot Skill Levels ---
-                // Level 1: Weak (Rank 7)
-                // Level 2: Medium (Rank 5)
-                // Level 3: Strong (Rank 3, fast)
-                // Level 4: Expert (Rank 1, thought out)
-
-                int rank = 1; // Default to best move
-                long thinkTime = 1000; // Default 1 second
+                int rank = 1;
+                long thinkTime = 1000;
 
                 switch (selectedBotLevel) {
                     case 1 -> {
@@ -1016,7 +995,6 @@ public class Main extends Application {
                         Position from = Position.fromAlgebraicNotation(bestMove.substring(0, 2));
                         Position to = Position.fromAlgebraicNotation(bestMove.substring(2, 4));
 
-                        // Pre-calculate sound conditions for bot
                         Piece piece = game.getBoard().getPieceAt(from);
                         Piece target = game.getBoard().getPieceAt(to);
                         boolean isCapture = (target != null);
@@ -1024,8 +1002,7 @@ public class Main extends Application {
 
                         game.playTurn(from, to);
 
-                        // Play sound for bot move
-                        if (game.isGameOver()) SoundManager.playSound("defeat"); // Player lost
+                        if (game.isGameOver()) SoundManager.playSound("defeat");
                         else if (game.getStatusMessage().contains("check")) SoundManager.playSound("check");
                         else if (isCastle) SoundManager.playSound("castle");
                         else if (isCapture) SoundManager.playSound("capture");
@@ -1038,7 +1015,7 @@ public class Main extends Application {
                             showGameOverDialog();
                         }
                     }
-                    isBotTurn = false; // Unlock Input
+                    isBotTurn = false;
                 });
 
             } catch (Exception e) {
@@ -1057,88 +1034,14 @@ public class Main extends Application {
 
         alert.showAndWait().ifPresent(response -> {
             if (response == javafx.scene.control.ButtonType.OK) {
-                showMenuScene(); // Return to menu
-                this.game = null; // Reset game
+                showMenuScene();
+                this.game = null;
             }
         });
     }
 
-    private void updateBoard(GridPane boardGui) {
-        // Forces the GridPane to only be as big as the tiles
-        // This prevents the border from floating at the edge of the window
-        boardGui.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-
-        // Ensures tiles are centered and touching each other
-        boardGui.setAlignment(Pos.CENTER);
-        boardGui.setHgap(0);
-        boardGui.setVgap(0);
-
-        // Applies a black border around the entire grid
-        boardGui.setStyle("-fx-border-color: black; -fx-border-width: 5; -fx-border-style: solid;");
-
-        DropShadow shadow = new DropShadow();
-        shadow.setColor(Color.rgb(0, 0, 0, 0.6)); // Black with 60% opacity
-        shadow.setRadius(70);                     // How "fuzzy" the shadow is (higher = softer)
-        shadow.setSpread(0.4);                    // How thick the shadow is
-        shadow.setOffsetX(10);                    // Shift slightly right
-        shadow.setOffsetY(10);                    // Shift slightly down
-
-        boardGui.setEffect(shadow);
-
-        boardGui.getChildren().clear(); // Clear old visuals
-
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                StackPane tile = new StackPane();
-
-                // Set size for visual consistency
-                tile.setPrefSize(60, 60);
-
-                boolean isLight = (row + col) % 2 == 0;
-
-                // 1. Background Image
-                ImageView backgroundSprite = ImageLoader.getBoardTile(isLight);
-                backgroundSprite.setFitWidth(60);
-                backgroundSprite.setFitHeight(60);
-                tile.getChildren().add(backgroundSprite);
-
-                // 2. Selection Highlight (Visual)
-                Position currentPos = new Position(row, col);
-                if (selectedPosition != null && selectedPosition.equals(currentPos)) {
-                    Rectangle highlight = new Rectangle(60, 60, Color.rgb(255, 0, 222, 0.4));
-                    tile.getChildren().add(highlight);
-                }
-                // highlight possible moves
-                if (possibleMoves.contains(currentPos)) {
-                    Rectangle moveHighlight = new Rectangle(60, 60, Color.rgb(255, 0, 222, 0.25));
-                    tile.getChildren().add(moveHighlight);
-                }
-
-
-                // 3. Piece Rendering
-                Piece piece = game.getBoard().getPieceAt(currentPos);
-                if (piece != null) {
-                    ImageView pieceSprite = ImageLoader.getPieceSprite(piece.getType(), piece.getColor());
-
-                    // Exclude from layout calculations so the tile size remains fixed
-                    pieceSprite.setManaged(false);
-
-                    // Manual Positioning:
-                    // Tile Height (60) - Sprite Height (~150) = -90.
-                    // Added offset (-10) for visual centering -> -100.
-                    pieceSprite.setLayoutX(0);
-                    pieceSprite.setLayoutY(-100);
-
-                    tile.getChildren().add(pieceSprite);
-                }
-
-                boardGui.add(tile, col, row);
-            }
-        }
-    }
-
     private void togglePause() {
-        SoundManager.playSound("pause"); // --- Sound ---
+        SoundManager.playSound("pause");
         if (!isPaused) {
             isPaused = true;
             timeline.pause();
