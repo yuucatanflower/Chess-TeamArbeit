@@ -553,7 +553,7 @@ public class Main extends Application {
                     -fx-background-color: transparent;
                     -fx-text-fill: white;
                     -fx-font-family: 'Consolas', 'Monospaced';
-                    -fx-font-size: 16px;
+                    -fx-font-size: 18px;
                     -fx-highlight-fill: transparent;
                     -fx-highlight-text-fill: white;
                 """);
@@ -565,7 +565,7 @@ public class Main extends Application {
 
         VBox sidebar = new VBox(10);
         sidebar.setPadding(new Insets(10, 15, 10, 15));
-        sidebar.setPrefWidth(300);
+        sidebar.setPrefWidth(350);
         sidebar.setStyle("-fx-background-color: rgba(0, 0, 0, 0.2);");
         sidebar.setAlignment(Pos.TOP_CENTER);
 
