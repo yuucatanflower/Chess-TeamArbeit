@@ -13,6 +13,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider; // Added Slider import
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -23,8 +24,11 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import com.easteurope.chess.model.GameState;
 import com.easteurope.chess.model.coreData.Position;
-import com.easteurope.chess.model.coreData.PieceType; // Needed for sound logic
+import com.easteurope.chess.model.coreData.PieceType;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.util.Duration;
 
 import java.util.Scanner;
@@ -34,7 +38,7 @@ public class Main extends Application {
     private Label whiteTimeLabel;
     private Label blackTimeLabel;
     private TextArea historyArea;
-    private Stage window; // Reference to the main window for switching of the scenes
+    private Stage window;
     private Position selectedPosition = null;
     private long selectedTimeMs = 60 * 1000;
     private com.easteurope.chess.model.coreData.Color selectedColor = com.easteurope.chess.model.coreData.Color.WHITE;
@@ -48,7 +52,7 @@ public class Main extends Application {
     private java.util.List<Position> possibleMoves = new java.util.ArrayList<>();
 
     // --- Bot Variables ---
-    private int selectedBotLevel = 0; // 0 = PvP, 1-4 = Bot Level
+    private int selectedBotLevel = 0;
     private Stockfish bot;
     private boolean isBotTurn = false;
 
@@ -65,10 +69,8 @@ public class Main extends Application {
         String choice = sc.nextLine();
 
         if (choice.equals("2")) {
-            // Launches the JavaFX application
             launch(args);
         } else {
-            // Launches the console logic
             startConsoleGame();
         }
     }
@@ -86,13 +88,9 @@ public class Main extends Application {
 
         if (bot.startEngine()) {
             System.out.println("Engine started!");
-
-            // Ask for the best move from the starting position
             String startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-            String move = bot.getBestMove(startFen, 1000); // Think for 1 second
-
+            String move = bot.getBestMove(startFen, 1000);
             System.out.println("Stockfish suggests: " + move);
-
             bot.stopEngine();
         } else {
             System.out.println("Failed to start engine.");
@@ -101,11 +99,10 @@ public class Main extends Application {
         while (!game.isGameOver()) {
             game.getBoard().printBoard();
             System.out.println("STATUS: " + game.getStatusMessage());
-            System.out.print("> "); // prompt move or undo
+            System.out.print("> ");
 
             String command = input.nextLine().trim();
 
-            //input processing
             if (command.equalsIgnoreCase("exit") || command.equalsIgnoreCase("quit")) {
                 break;
             }
@@ -114,12 +111,11 @@ public class Main extends Application {
                 continue;
             }
 
-            // move parsing ( expects 'e2-e4' type format )
             if (isValidInputFormat(command)) {
                 try {
-                    String[] commandParts = command.split("-"); // splits the command on '-' into two elements and puts them in an array
-                    Position from = Position.fromAlgebraicNotation(commandParts[0]); // for 'e2-e4' that would be e2
-                    Position to = Position.fromAlgebraicNotation(commandParts[1]); // and e4
+                    String[] commandParts = command.split("-");
+                    Position from = Position.fromAlgebraicNotation(commandParts[0]);
+                    Position to = Position.fromAlgebraicNotation(commandParts[1]);
 
                     boolean success = game.playTurn(from, to);
                     if (success) {
@@ -128,21 +124,18 @@ public class Main extends Application {
                         System.out.println("Move failed!");
                     }
                 } catch (Exception e) {
-                    System.out.println("Error parsing move: Use 'e2-e4' format."); //if format is wrong
+                    System.out.println("Error parsing move: Use 'e2-e4' format.");
                 }
             } else {
-                System.out.println("Unknown command! Type moves as 'e2-e4' or 'undo' to revert move.");//if command is not available
+                System.out.println("Unknown command! Type moves as 'e2-e4' or 'undo' to revert move.");
             }
         }
-        //final render: shows final board layout and status message
         game.getBoard().printBoard();
         System.out.println("FINAL STATUS: " + game.getStatusMessage());
-
         System.out.println("Game Ended.");
         input.close();
     }
 
-    //regex check for "a1-a2" format
     private static boolean isValidInputFormat(String input) {
         return input.matches("[a-h][1-8]-[a-h][1-8]");
     }
@@ -153,7 +146,6 @@ public class Main extends Application {
         this.window = primaryStage;
         window.setTitle("Chess TeamArbeit");
 
-        // --- Initialize Sounds ---
         SoundManager.loadSounds();
         SoundManager.startMusic();
 
@@ -195,7 +187,6 @@ public class Main extends Application {
 
         VBox.setMargin(logoImageView, new Insets(0, 0, 30, 0));
 
-        // Make sure RetroByte.ttf is in src/main/resources/
         Font customFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 28);
 
         // getting the family name ensures we use the correct name in CSS (e.g., "RetroByte")
@@ -212,18 +203,6 @@ public class Main extends Application {
                     -fx-border-radius: 6;
                     -fx-background-radius: 6;
                 """.formatted(fontFamily);
-
-//        String btnStyleHover = """
-//                -fx-background-color: white;
-//                -fx-text-fill: #233447;
-//                -fx-font-family: "%s";
-//                -fx-font-size: 24px;
-//                -fx-padding: 8 24;
-//                -fx-border-color: white;
-//                -fx-border-width: 2;
-//                -fx-border-radius: 6;
-//                -fx-background-radius: 6;
-//            """.formatted(fontFamily);
 
         Button playBtn = new Button("PLAY");
         Button settingsBtn = new Button("SETTINGS");
@@ -269,19 +248,12 @@ public class Main extends Application {
             showSettingsScene();
         });
 
-        // 1. Add the buttons to the VBox
-        content.getChildren().addAll(logoImageView, playBtn, settingsBtn, musicBtn, exitBtn);
+        // 1. Add the buttons to the VBox (Removed Music Btn from here)
+        content.getChildren().addAll(logoImageView, playBtn, settingsBtn, exitBtn);
 
-        // 2. Create the Animated Background
         Pane animatedBg = BackgroundEffect.createAnimatedBackground();
-
-        // 3. Stack the UI on top of the Background
         StackPane root = new StackPane();
-
-        // Layer 1: The background (at the back)
         root.getChildren().add(animatedBg);
-
-        // Layer 2: The VBox containing the buttons (at the front)
         root.getChildren().add(content);
 
         window.getScene().setRoot(root);
@@ -289,44 +261,82 @@ public class Main extends Application {
 
     // SCREEN 2: GAME SETUP
     private void showSetupScene() {
-        // 1. Layout Container
-        VBox layout = new VBox(20); // Spacing between rows
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(20));
+        VBox layout = new VBox(30);
 
-        // --- STYLES ---
         String titleStyle = "-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;";
         String sectionStyle = "-fx-text-fill: white; -fx-font-size: 16px;";
 
-        // --- TOP: Back Button ---
+        String setupBtnStyle = """
+            -fx-background-color: #7f8c8d;
+            -fx-text-fill: white;
+            -fx-font-size: 14px;
+            -fx-pref-width: 70px;
+        """;
+
+        Button btn1 = new Button("1m");
+        Button btn5 = new Button("5m");
+        Button btn10 = new Button("10m");
+
+        btn1.setOnAction(e -> {
+            selectedTimeMs = 60 * 1000;
+            SoundManager.playSound("click");
+        });
+        btn5.setOnAction(e -> {
+            selectedTimeMs = 5 * 60 * 1000;
+            SoundManager.playSound("click");
+        });
+        btn10.setOnAction(e -> {
+            selectedTimeMs = 10 * 60 * 1000;
+            SoundManager.playSound("click");
+        });
+
+        Button startBtn = new Button("START");
+        startBtn.setPrefSize(120, 40);
+        startBtn.setStyle("""
+            -fx-background-color: #124373;
+            -fx-text-fill: white;
+            -fx-font-size: 16px;
+            -fx-font-weight: bold;
+        """);
+
+        layout.setAlignment(Pos.CENTER);
+        layout.setPadding(new Insets(20));
+
+        Label title = new Label("Bot Selection");
+        title.setStyle(titleStyle);
+
+        // --- BACK BUTTON IN TOP-RIGHT  ---
         Button backBtn = new Button("⮌");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 22px;");
+        backBtn.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 22px;
+                """);
         backBtn.setOnAction(e -> showMenuScene());
 
-        HBox backBox = new HBox(backBtn);
+
+        HBox backBox = new HBox();
         backBox.setAlignment(Pos.TOP_RIGHT);
+        backBox.getChildren().add(backBtn);
 
-        // --- 1. Color Selection ---
-        HBox colorBox = chooseColor();
 
-        // --- 2. Bot Selection ---
-        Label botLabel = new Label("Bot Selection");
-        botLabel.setStyle(titleStyle);
+        layout.getChildren().add(backBox);
+        layout.getChildren().add(chooseColor());
 
+        // --- Bot Selection Logic ---
         HBox bots = new HBox(20);
         bots.setAlignment(Pos.CENTER);
 
-        // Logic for Bot Buttons
         java.util.List<Button> botButtons = new java.util.ArrayList<>();
+
         Button pvpBtn = new Button("PvP");
         pvpBtn.setPrefSize(80, 80);
-        // Default Selected Style
-        pvpBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
-
+        pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;"); // Default selected
         pvpBtn.setOnAction(e -> {
             selectedBotLevel = 0;
             SoundManager.playSound("click");
-            pvpBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+            // Update styles
+            pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
             for (Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
         bots.getChildren().add(pvpBtn);
@@ -343,25 +353,22 @@ public class Main extends Application {
                 SoundManager.playSound("click");
                 pvpBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
                 for (Button b : botButtons) {
-                    if (b == botBtn) b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                    if (b == botBtn) b.setStyle("-fx-background-color: #124373; -fx-text-fill: white;");
                     else b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
                 }
             });
             bots.getChildren().add(botBtn);
         }
+        layout.getChildren().add(bots); // ADD THE BOTS CONTAINER TO LAYOUT
 
-        // --- 3. Time Control ---
+        // Time Setting
         Label timeLabel = new Label("Time Control");
         timeLabel.setStyle(sectionStyle);
+        layout.getChildren().add(timeLabel); // ADD LABEL
 
         HBox timeControls = new HBox(20);
         timeControls.setAlignment(Pos.CENTER);
 
-        Button btn1 = new Button("1m");
-        Button btn5 = new Button("5m");
-        Button btn10 = new Button("10m");
-
-        // Default Styles
         btn1.setStyle("-fx-background-color: #ffffff;");
         btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
@@ -373,6 +380,7 @@ public class Main extends Application {
             btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
             btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
+
         btn5.setOnAction(e -> {
             selectedTimeMs = 5 * 60 * 1000;
             SoundManager.playSound("click");
@@ -380,6 +388,7 @@ public class Main extends Application {
             btn1.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
             btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
+
         btn10.setOnAction(e -> {
             selectedTimeMs = 10 * 60 * 1000;
             SoundManager.playSound("click");
@@ -389,13 +398,15 @@ public class Main extends Application {
         });
 
         timeControls.getChildren().addAll(btn1, btn5, btn10);
+        layout.getChildren().add(timeControls); // ADD TIME CONTROLS
 
-        // --- 4. Increment Control ---
+        // Increments
         Label incLabel = new Label("Increment");
         incLabel.setStyle(sectionStyle);
+        layout.getChildren().add(incLabel);
 
-        HBox incControls = new HBox(20);
-        incControls.setAlignment(Pos.CENTER);
+        HBox incrementControls = new HBox(20);
+        incrementControls.setAlignment(Pos.CENTER);
 
         Button inc0 = new Button("+0s");
         Button inc5 = new Button("+5s");
@@ -412,6 +423,7 @@ public class Main extends Application {
             inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
             inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
+
         inc5.setOnAction(e -> {
             selectedIncrementMs = 5 * 1000;
             SoundManager.playSound("click");
@@ -419,6 +431,7 @@ public class Main extends Application {
             inc0.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
             inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
+
         inc10.setOnAction(e -> {
             selectedIncrementMs = 10 * 1000;
             SoundManager.playSound("click");
@@ -427,15 +440,13 @@ public class Main extends Application {
             inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
 
-        incControls.getChildren().addAll(inc0, inc5, inc10);
+        incrementControls.getChildren().addAll(inc0, inc5, inc10);
+        layout.getChildren().add(incrementControls); // ADD INCREMENTS
 
-        // --- 5. Start Button ---
-        Button startBtn = new Button("START");
-        startBtn.setPrefSize(120, 40);
-        startBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
-
+        // --- Start Logic (Init Bot) ---
         startBtn.setOnAction(e -> {
             SoundManager.playSound("start");
+            // Initialize Bot if selected
             if (selectedBotLevel > 0) {
                 bot = new Stockfish();
                 if (bot.startEngine()) {
@@ -448,28 +459,14 @@ public class Main extends Application {
             showBoardScene();
         });
 
-        // --- ASSEMBLE THE LAYOUT ---
-        layout.getChildren().addAll(
-                backBox,
-                colorBox,
-                botLabel,
-                bots,
-                timeLabel,
-                timeControls,
-                incLabel,
-                incControls,
-                startBtn
-        );
+        layout.getChildren().add(startBtn); // ADD START BUTTON
 
-        VBox.setMargin(startBtn, new Insets(20, 0, 0, 0));
-
-        // --- ANIMATION / BACKGROUND ---
         Pane animatedBg = BackgroundEffect.createAnimatedBackground();
         StackPane root = new StackPane();
-        root.getChildren().add(animatedBg); // Layer 1 (Background)
-        root.getChildren().add(layout);     // Layer 2 (Buttons)
+        root.getChildren().add(animatedBg);
+        root.getChildren().add(layout);
 
-        window.getScene().setRoot(root);
+        window.setScene(new Scene(root, 800, 600));
     }
 
     // SCREEN 3: GAME BOARD
@@ -479,51 +476,67 @@ public class Main extends Application {
         BorderPane uiLayout = new BorderPane();
         uiLayout.setStyle("-fx-background-color: transparent;");
 
-        // --- GAME STACK (Board Layer) ---
         StackPane boardStack = new StackPane();
 
-        // LAYER 1: VISUALS (Bottom)
-        // Only renders images. Mouse events are disabled here.
         GridPane boardGui = new GridPane();
         boardGui.setAlignment(Pos.CENTER);
-        boardGui.setMouseTransparent(true); // CRITICAL: Makes all images "ghosts" to the mouse.
+        boardGui.setMouseTransparent(true);
 
-        // LAYER 2: INPUT (Top)
-        // An invisible grid that captures clicks.
         GridPane inputGrid = new GridPane();
         inputGrid.setAlignment(Pos.CENTER);
-        setupInputLayer(inputGrid, boardGui); // Helper method to build the invisible grid
+        setupInputLayer(inputGrid, boardGui);
 
-        // Stack them: Input goes ON TOP of Visuals
         boardStack.getChildren().addAll(boardGui, inputGrid);
 
-        // Initial render of the board visuals
         updateBoard(boardGui);
 
         uiLayout.setCenter(boardStack);
-        // ---- PAUSE OVERLAY ----
         pauseOverlay = buildPauseOverlay();
         pauseOverlay.setVisible(false);
         boardStack.getChildren().add(pauseOverlay);
 
 
-        // --- HISTORY ---
         historyArea = new TextArea();
         historyArea.setEditable(false);
-        historyArea.setPrefHeight(400);
+        // Made preferred height smaller to fit a "square" look alongside the board padding
+        historyArea.setPrefHeight(200); // Decreased height
+
+        // --- Transparent Style ---
+        historyArea.setStyle("""
+            -fx-control-inner-background: transparent;
+            -fx-background-color: transparent;
+            -fx-text-fill: white;
+            -fx-font-family: 'Consolas', 'Monospaced';
+            -fx-font-size: 16px;
+            -fx-highlight-fill: transparent;
+            -fx-highlight-text-fill: white;
+        """);
+        // To remove the scrollpane border/background inside TextArea structure
+        historyArea.getStylesheets().add("data:text/css," +
+                ".text-area .scroll-pane { -fx-background-color: transparent; -fx-hbar-policy: never; }" + // Hide horizontal scrollbar
+                ".text-area .scroll-pane .viewport { -fx-background-color: transparent; }" +
+                ".text-area .content { -fx-background-color: transparent; }"
+        );
 
         VBox sidebar = new VBox(10);
-        sidebar.setPadding(new Insets(10));
-        sidebar.setPrefWidth(200);
+        // --- INCREASED PADDING ---
+        // Top and Bottom padding increased to make it smaller in height visually
+        sidebar.setPadding(new Insets(10, 15, 10, 15));
+        sidebar.setPrefWidth(240); // Slightly wider to avoid horizontal scroll
+        // More transparent backing for readability
+        sidebar.setStyle("-fx-background-color: rgba(0, 0, 0, 0.15);");
 
-        Label historyLabel = new Label("Move Order");
+        // --- TOP_CENTER ALIGNMENT ---
+        sidebar.setAlignment(Pos.TOP_CENTER);
+
+        Label historyLabel = new Label("");
         historyLabel.setTextFill(Color.WHITE);
+        historyLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
 
         sidebar.getChildren().addAll(historyLabel, historyArea);
         uiLayout.setRight(sidebar);
 
 
-        // --- TIMER ---
         HBox topBar = new HBox(100);
         topBar.setAlignment(Pos.CENTER);
         topBar.setPadding(new Insets(10));
@@ -614,15 +627,86 @@ public class Main extends Application {
         return colorControl;
     }
 
-    // Setting Scene
+    // Setting Scene (UPDATED)
     private void showSettingsScene() {
-        VBox layout = new VBox(30);
-        layout.setAlignment(Pos.CENTER);
-        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #233447, #1b2838);");
+        VBox content = new VBox(30);
+        content.setAlignment(Pos.CENTER);
 
         Label title = new Label("SETTINGS");
         title.setStyle("-fx-font-size: 48px; -fx-text-fill: white; -fx-font-weight: bold;");
 
+        // --- NEW: Volume Sliders ---
+        VBox volumeBox = new VBox(20);
+        volumeBox.setAlignment(Pos.CENTER);
+        volumeBox.setPadding(new Insets(20));
+        volumeBox.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); -fx-background-radius: 10;");
+        volumeBox.setMaxWidth(400);
+
+        // Styling string for sliders
+        String sliderStyle = """
+                -fx-control-inner-background: #7f8c8d; 
+                -fx-background-color: transparent, #2c3e50, transparent;
+                -fx-color: #124373;
+                """;
+
+        // Master Volume
+        Label masterLabel = new Label("Master Volume");
+        masterLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+        Slider masterSlider = new Slider(0, 100, SoundManager.getMasterVolume() * 100);
+        masterSlider.setStyle(sliderStyle);
+        masterSlider.setShowTickLabels(true);
+        masterSlider.setShowTickMarks(true);
+        masterSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+            SoundManager.setMasterVolume(newVal.doubleValue() / 100.0);
+        });
+
+        // Music Volume
+        Label musicLabel = new Label("Music Volume");
+        musicLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+        Slider musicSlider = new Slider(0, 100, SoundManager.getMusicVolume() * 100);
+        musicSlider.setStyle(sliderStyle);
+        musicSlider.setShowTickLabels(true);
+        musicSlider.setShowTickMarks(true);
+        musicSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+            SoundManager.setMusicVolume(newVal.doubleValue() / 100.0);
+        });
+
+        // Music Toggle (Moved from Menu)
+        String btnStyle = """
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-size: 18px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """;
+
+        String btnStyleHover = """
+                    -fx-background-color: white;
+                    -fx-text-fill: #233447;
+                    -fx-font-size: 18px;
+                    -fx-padding: 8 24;
+                    -fx-border-color: white;
+                    -fx-border-width: 2;
+                    -fx-border-radius: 6;
+                    -fx-background-radius: 6;
+                """;
+
+        Button musicBtn = new Button(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
+        musicBtn.setStyle(btnStyle);
+        musicBtn.setOnAction(e -> {
+            SoundManager.toggleMusic();
+            SoundManager.playSound("click");
+            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
+        });
+        musicBtn.setOnMouseEntered(e -> musicBtn.setStyle(btnStyleHover));
+        musicBtn.setOnMouseExited(e -> musicBtn.setStyle(btnStyle));
+
+        volumeBox.getChildren().addAll(masterLabel, masterSlider, musicLabel, musicSlider, musicBtn);
+
+        // Back Button
         Button backBtn = new Button("BACK TO MENU");
         backBtn.setStyle("""
                     -fx-background-color: transparent;
@@ -662,9 +746,14 @@ public class Main extends Application {
             showMenuScene();
         });
 
-        layout.getChildren().addAll(title, backBtn);
+        content.getChildren().addAll(title, volumeBox, backBtn);
 
-        Scene scene = new Scene(layout, 900, 700);
+        Pane animatedBg = BackgroundEffect.createAnimatedBackground();
+        StackPane root = new StackPane();
+        root.getChildren().add(animatedBg);
+        root.getChildren().add(content);
+
+        Scene scene = new Scene(root, 900, 700);
         window.setScene(scene);
     }
 
@@ -854,8 +943,23 @@ public class Main extends Application {
                 // Ensure toFEN() is implemented in Board.java!
                 String fen = game.getBoard().toFEN(game.getCurrentTurn(), null, 0, 1);
 
-                // Delay thinking based on difficulty (Level 1=fast, Level 4=slower)
-                String bestMove = bot.getRankedMove(fen, selectedBotLevel * 300, 1);
+                // --- Bot Skill Levels ---
+                // Level 1: Weak (Rank 7)
+                // Level 2: Medium (Rank 5)
+                // Level 3: Strong (Rank 3, fast)
+                // Level 4: Expert (Rank 1, thought out)
+
+                int rank = 1; // Default to best move
+                long thinkTime = 1000; // Default 1 second
+
+                switch (selectedBotLevel) {
+                    case 1 -> { rank = 7; thinkTime = 100; }
+                    case 2 -> { rank = 5; thinkTime = 500; }
+                    case 3 -> { rank = 3; thinkTime = 800; }
+                    case 4 -> { rank = 1; thinkTime = 2000; }
+                }
+
+                String bestMove = bot.getRankedMove(fen, (int)thinkTime, rank);
 
                 Platform.runLater(() -> {
                     if (bestMove != null) {
@@ -893,6 +997,7 @@ public class Main extends Application {
             }
         }).start();
     }
+
 
     private void showGameOverDialog() {
         javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);

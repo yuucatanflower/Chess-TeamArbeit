@@ -5,7 +5,7 @@ import javafx.scene.paint.Color;
 import com.easteurope.chess.model.coreData.PieceType;
 
 public class ImageLoader {
-    private static final Image SPRITE_SHEET = new Image(ImageLoader.class.getResourceAsStream("/NullTale_Chess.png"));
+    private static final Image SPRITE_SHEET = new Image(ImageLoader.class.getResourceAsStream("/NullTale_Chess1.png")); //1 for purple 2 for blue
     private static final int GRID_SIZE = 16;
 
     // Scales 1 original pixel to a 5x5 block (e.g., 12px width becomes 60px).
