@@ -11,10 +11,7 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -299,6 +296,7 @@ public class Main extends Application {
 
         java.util.List<Button> botButtons = new java.util.ArrayList<>();
 
+
         Button pvpBtn = new Button("PvP");
         pvpBtn.setPrefSize(80, 80);
         pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
@@ -310,25 +308,54 @@ public class Main extends Application {
         });
         bots.getChildren().add(pvpBtn);
 
+
+        // Bot portraits
+
         for (int i = 1; i <= 4; i++) {
             final int level = i;
-            Button botBtn = new Button("BOT " + i);
-            botBtn.setPrefSize(80, 80);
-            botBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-            botButtons.add(botBtn);
 
-            botBtn.setOnAction(e -> {
+            String imagePath = "/images/bot" + i + ".png";
+            Image image = new Image(getClass().getResource(imagePath).toString());
+            ImageView imageView = new ImageView(image);
+
+            imageView.setFitWidth(90);
+            imageView.setFitHeight(90);
+            imageView.setPreserveRatio(true);
+
+            // Bot names, can be changed anytime
+            String botName = switch (i) {
+                case 1 -> "name1";
+                case 2 -> "name2";
+                case 3 -> "name3";
+                case 4 -> "name4";
+                default -> "";
+            };
+
+            Button portraitBtn = new Button(botName);
+            portraitBtn.setGraphic(imageView);
+            portraitBtn.setContentDisplay(ContentDisplay.TOP); // image above text
+            portraitBtn.setGraphicTextGap(5);
+            portraitBtn.setPrefSize(100, 120);
+            portraitBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+
+            botButtons.add(portraitBtn);
+
+            portraitBtn.setOnAction(e -> {
                 selectedBotLevel = level;
                 SoundManager.playSound("click");
+
                 pvpBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
                 for (Button b : botButtons) {
-                    if (b == botBtn) b.setStyle("-fx-background-color: #124373; -fx-text-fill: white;");
-                    else b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+                    if (b == portraitBtn)
+                        b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                    else
+                        b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
                 }
             });
-
-            bots.getChildren().add(botBtn);
+            bots.getChildren().add(portraitBtn);
         }
+
+
         layout.getChildren().add(bots);
 
         Label timeLabel = new Label("Time Control");
