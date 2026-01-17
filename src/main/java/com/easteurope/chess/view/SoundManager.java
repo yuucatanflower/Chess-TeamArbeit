@@ -10,19 +10,19 @@ import java.util.Map;
 
 public class SoundManager {
 
-    // Points to src/main/resources/sound/ or resources/sound/
     private static final String SOUND_PATH = "/sound/";
 
-    // Volume Control (0.0 to 1.0)
-    private static final double UI_VOLUME = 0.4; // 30% volume for sound effects
-    private static final double MUSIC_VOLUME = 0.4; // 30% volume for music
+    // --- Volume State ---
+    // 1.0 = 100%, 0.5 = 50%
+    private static double masterVolume = 1.0;
+    private static double musicVolume = 0.4;
+    private static double uiVolume = 0.4;
 
     private static final Map<String, AudioClip> soundCache = new HashMap<>();
     private static MediaPlayer musicPlayer;
     private static boolean isMusicMuted = false;
 
     public static void loadSounds() {
-        // Load UI Sounds (Mapped to your specific filenames)
         loadClip("start", "chess_piece_select.wav");
         loadClip("move", "chess_move.mp3");
         loadClip("knight_move", "chess_knight_move.wav");
@@ -36,7 +36,7 @@ public class SoundManager {
         loadClip("checkmate", "chess_checkmate.wav");
         loadClip("defeat", "chess_game_over.wav");
         loadClip("illegal", "chess_illegal_move.wav");
-         loadClip("switch_turn", "chess_switch_turn.wav");
+        loadClip("switch_turn", "chess_switch_turn.wav");
 
         // Setup Background Music
         try {
@@ -44,8 +44,8 @@ public class SoundManager {
             if (musicUrl != null) {
                 Media media = new Media(musicUrl.toExternalForm());
                 musicPlayer = new MediaPlayer(media);
-                musicPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Loop
-                musicPlayer.setVolume(MUSIC_VOLUME);
+                musicPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+                updateMusicVolume(); // Apply initial volume
             }
         } catch (Exception e) {
             System.err.println("Could not load background music.");
@@ -57,7 +57,6 @@ public class SoundManager {
             URL url = SoundManager.class.getResource(SOUND_PATH + filename);
             if (url != null) {
                 AudioClip clip = new AudioClip(url.toExternalForm());
-                clip.setVolume(UI_VOLUME); // Set reduced volume here
                 soundCache.put(key, clip);
             } else {
                 System.err.println("Sound missing: " + filename);
@@ -69,17 +68,40 @@ public class SoundManager {
 
     public static void playSound(String key) {
         AudioClip clip = soundCache.get(key);
-        if (clip != null) clip.play();
+        if (clip != null) {
+            // Calculate effective volume: Master * UI
+            clip.setVolume(masterVolume * uiVolume);
+            clip.play();
+        }
     }
+
+    // --- Volume Setters ---
+
+    public static void setMasterVolume(double volume) {
+        masterVolume = Math.max(0.0, Math.min(1.0, volume)); // Clamp 0-1
+        updateMusicVolume();
+    }
+
+    public static void setMusicVolume(double volume) {
+        musicVolume = Math.max(0.0, Math.min(1.0, volume));
+        updateMusicVolume();
+    }
+
+    private static void updateMusicVolume() {
+        if (musicPlayer != null) {
+            // Effective music volume is Master * Music setting
+            musicPlayer.setVolume(masterVolume * musicVolume);
+        }
+    }
+
+    // --- Music Controls ---
 
     public static void startMusic() {
         if (musicPlayer != null && !isMusicMuted) musicPlayer.play();
     }
 
     public static void stopMusic() {
-        if (musicPlayer != null) {
-            musicPlayer.stop();
-        }
+        if (musicPlayer != null) musicPlayer.stop();
     }
 
     public static void toggleMusic() {
@@ -96,4 +118,8 @@ public class SoundManager {
     public static boolean isMusicPlaying() {
         return musicPlayer != null && musicPlayer.getStatus() == MediaPlayer.Status.PLAYING;
     }
+
+    // Getters for UI Sliders
+    public static double getMasterVolume() { return masterVolume; }
+    public static double getMusicVolume() { return musicVolume; }
 }
