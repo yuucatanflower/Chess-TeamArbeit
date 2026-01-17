@@ -267,11 +267,11 @@ public class Main extends Application {
         String sectionStyle = "-fx-text-fill: white; -fx-font-size: 16px;";
 
         String setupBtnStyle = """
-            -fx-background-color: #7f8c8d;
-            -fx-text-fill: white;
-            -fx-font-size: 14px;
-            -fx-pref-width: 70px;
-        """;
+                    -fx-background-color: #7f8c8d;
+                    -fx-text-fill: white;
+                    -fx-font-size: 14px;
+                    -fx-pref-width: 70px;
+                """;
 
         Button btn1 = new Button("1m");
         Button btn5 = new Button("5m");
@@ -293,11 +293,11 @@ public class Main extends Application {
         Button startBtn = new Button("START");
         startBtn.setPrefSize(120, 40);
         startBtn.setStyle("""
-            -fx-background-color: #124373;
-            -fx-text-fill: white;
-            -fx-font-size: 16px;
-            -fx-font-weight: bold;
-        """);
+                    -fx-background-color: #124373;
+                    -fx-text-fill: white;
+                    -fx-font-size: 16px;
+                    -fx-font-weight: bold;
+                """);
 
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(20));
@@ -466,7 +466,7 @@ public class Main extends Application {
         root.getChildren().add(animatedBg);
         root.getChildren().add(layout);
 
-        window.setScene(new Scene(root, 800, 600));
+        window.getScene().setRoot(root);
     }
 
     // SCREEN 3: GAME BOARD
@@ -503,14 +503,14 @@ public class Main extends Application {
 
         // --- Transparent Style ---
         historyArea.setStyle("""
-            -fx-control-inner-background: transparent;
-            -fx-background-color: transparent;
-            -fx-text-fill: white;
-            -fx-font-family: 'Consolas', 'Monospaced';
-            -fx-font-size: 16px;
-            -fx-highlight-fill: transparent;
-            -fx-highlight-text-fill: white;
-        """);
+                    -fx-control-inner-background: transparent;
+                    -fx-background-color: transparent;
+                    -fx-text-fill: white;
+                    -fx-font-family: 'Consolas', 'Monospaced';
+                    -fx-font-size: 16px;
+                    -fx-highlight-fill: transparent;
+                    -fx-highlight-text-fill: white;
+                """);
         // To remove the scrollpane border/background inside TextArea structure
         historyArea.getStylesheets().add("data:text/css," +
                 ".text-area .scroll-pane { -fx-background-color: transparent; -fx-hbar-policy: never; }" + // Hide horizontal scrollbar
@@ -632,8 +632,19 @@ public class Main extends Application {
         VBox content = new VBox(30);
         content.setAlignment(Pos.CENTER);
 
+        Font customFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 28);
+
+        // getting the family name ensures we use the correct name in CSS (e.g., "RetroByte")
+        String fontFamily = (customFont != null) ? customFont.getFamily() : "Arial";
+
         Label title = new Label("SETTINGS");
-        title.setStyle("-fx-font-size: 48px; -fx-text-fill: white; -fx-font-weight: bold;");
+
+        title.setStyle("""
+                    -fx-font-family: "%s";
+                    -fx-font-size: 64px;
+                    -fx-text-fill: white;
+                    -fx-font-weight: bold;
+                """.formatted(fontFamily));
 
         // --- NEW: Volume Sliders ---
         VBox volumeBox = new VBox(20);
@@ -671,29 +682,19 @@ public class Main extends Application {
             SoundManager.setMusicVolume(newVal.doubleValue() / 100.0);
         });
 
-        // Music Toggle (Moved from Menu)
         String btnStyle = """
-                    -fx-background-color: transparent;
-                    -fx-text-fill: white;
-                    -fx-font-size: 18px;
-                    -fx-padding: 8 24;
-                    -fx-border-color: white;
-                    -fx-border-width: 2;
-                    -fx-border-radius: 6;
-                    -fx-background-radius: 6;
-                """;
-
-        String btnStyleHover = """
                     -fx-background-color: white;
                     -fx-text-fill: #233447;
-                    -fx-font-size: 18px;
+                    -fx-font-family: "%s";
+                    -fx-font-size: 30px;
                     -fx-padding: 8 24;
                     -fx-border-color: white;
                     -fx-border-width: 2;
                     -fx-border-radius: 6;
                     -fx-background-radius: 6;
-                """;
+                """.formatted(fontFamily);
 
+        // Music Toggle (Moved from Menu)
         Button musicBtn = new Button(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
         musicBtn.setStyle(btnStyle);
         musicBtn.setOnAction(e -> {
@@ -701,45 +702,14 @@ public class Main extends Application {
             SoundManager.playSound("click");
             musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
         });
-        musicBtn.setOnMouseEntered(e -> musicBtn.setStyle(btnStyleHover));
+        musicBtn.setOnMouseEntered(e -> musicBtn.setStyle(btnStyle));
         musicBtn.setOnMouseExited(e -> musicBtn.setStyle(btnStyle));
 
         volumeBox.getChildren().addAll(masterLabel, masterSlider, musicLabel, musicSlider, musicBtn);
 
         // Back Button
         Button backBtn = new Button("BACK TO MENU");
-        backBtn.setStyle("""
-                    -fx-background-color: transparent;
-                    -fx-text-fill: white;
-                    -fx-font-size: 24px;
-                    -fx-padding: 8 24;
-                    -fx-border-color: white;
-                    -fx-border-width: 2;
-                    -fx-border-radius: 6;
-                    -fx-background-radius: 6;
-                """);
-
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("""
-                    -fx-background-color: white;
-                    -fx-text-fill: #233447;
-                    -fx-font-size: 24px;
-                    -fx-padding: 8 24;
-                    -fx-border-color: white;
-                    -fx-border-width: 2;
-                    -fx-border-radius: 6;
-                    -fx-background-radius: 6;
-                """));
-
-        backBtn.setOnMouseExited(e -> backBtn.setStyle("""
-                    -fx-background-color: transparent;
-                    -fx-text-fill: white;
-                    -fx-font-size: 24px;
-                    -fx-padding: 8 24;
-                    -fx-border-color: white;
-                    -fx-border-width: 2;
-                    -fx-border-radius: 6;
-                    -fx-background-radius: 6;
-                """));
+        backBtn.setStyle(btnStyle);
 
         backBtn.setOnAction(e -> {
             SoundManager.playSound("click");
@@ -753,8 +723,7 @@ public class Main extends Application {
         root.getChildren().add(animatedBg);
         root.getChildren().add(content);
 
-        Scene scene = new Scene(root, 900, 700);
-        window.setScene(scene);
+        window.getScene().setRoot(root);
     }
 
     private String formatTime(long ms) {
@@ -953,13 +922,25 @@ public class Main extends Application {
                 long thinkTime = 1000; // Default 1 second
 
                 switch (selectedBotLevel) {
-                    case 1 -> { rank = 7; thinkTime = 100; }
-                    case 2 -> { rank = 5; thinkTime = 500; }
-                    case 3 -> { rank = 3; thinkTime = 800; }
-                    case 4 -> { rank = 1; thinkTime = 2000; }
+                    case 1 -> {
+                        rank = 7;
+                        thinkTime = 100;
+                    }
+                    case 2 -> {
+                        rank = 5;
+                        thinkTime = 500;
+                    }
+                    case 3 -> {
+                        rank = 3;
+                        thinkTime = 800;
+                    }
+                    case 4 -> {
+                        rank = 1;
+                        thinkTime = 2000;
+                    }
                 }
 
-                String bestMove = bot.getRankedMove(fen, (int)thinkTime, rank);
+                String bestMove = bot.getRankedMove(fen, (int) thinkTime, rank);
 
                 Platform.runLater(() -> {
                     if (bestMove != null) {
