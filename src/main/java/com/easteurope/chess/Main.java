@@ -632,7 +632,7 @@ public class Main extends Application {
         window.getScene().setRoot(root);
         window.getScene().setOnKeyPressed(e -> {
             switch (e.getCode()) {
-                case ESCAPE -> togglePause();
+                case P -> togglePause();
             }
         });
 
@@ -862,7 +862,7 @@ public class Main extends Application {
         musicBtn.setOnAction(e -> {
             SoundManager.toggleMusic();
             SoundManager.playSound("click");
-            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
+            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: OFF" : "MUSIC: ON");
         });
         musicBtn.setOnMouseEntered(e -> musicBtn.setStyle(btnStyle));
         musicBtn.setOnMouseExited(e -> musicBtn.setStyle(btnStyle));
@@ -1041,20 +1041,20 @@ public class Main extends Application {
 
                 switch (selectedBotLevel) {
                     case 1 -> {
-                        rank = 7;
-                        thinkTime = 100;
+                        rank = 6;
+                        thinkTime = 700;
                     }
                     case 2 -> {
-                        rank = 5;
-                        thinkTime = 500;
+                        rank = 4;
+                        thinkTime = 1200;
                     }
                     case 3 -> {
                         rank = 3;
-                        thinkTime = 800;
+                        thinkTime = 1800;
                     }
                     case 4 -> {
                         rank = 1;
-                        thinkTime = 2000;
+                        thinkTime = 3200;
                     }
                 }
 

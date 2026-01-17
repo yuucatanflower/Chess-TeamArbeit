@@ -40,7 +40,7 @@ public class SoundManager {
 
         // Setup Background Music
         try {
-            URL musicUrl = SoundManager.class.getResource(SOUND_PATH + "menu_bg1.mp3");
+            URL musicUrl = SoundManager.class.getResource(SOUND_PATH + "menu_bg1_2.mp3");
             if (musicUrl != null) {
                 Media media = new Media(musicUrl.toExternalForm());
                 musicPlayer = new MediaPlayer(media);
