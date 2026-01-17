@@ -478,4 +478,8 @@ public class GameState {
         lastMoveTimestamp = now;
     }
 
+    public void resetLastMoveTimestamp() {
+        lastMoveTimestamp = System.currentTimeMillis();
+    }
+
 }

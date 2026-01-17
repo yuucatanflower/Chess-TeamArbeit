@@ -1120,6 +1120,9 @@ public class Main extends Application {
             pauseOverlay.setVisible(true);
         } else {
             isPaused = false;
+
+            game.resetLastMoveTimestamp();
+
             timeline.play();
             pauseOverlay.setVisible(false);
         }
