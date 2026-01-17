@@ -19,6 +19,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import com.easteurope.chess.model.GameState;
 import com.easteurope.chess.model.coreData.Position;
@@ -38,6 +39,8 @@ public class Main extends Application {
     private long selectedTimeMs = 60 * 1000;
     private com.easteurope.chess.model.coreData.Color selectedColor = com.easteurope.chess.model.coreData.Color.WHITE;
     private long selectedIncrementMs = 0;
+    private StackPane gameOverOverlay;
+    private Text gameOverMessage;
 
     private Timeline timeline;
 
@@ -478,10 +481,10 @@ public class Main extends Application {
 
         // Style for Timers
         String timerStyle = """
-            -fx-text-fill: white; 
-            -fx-font-family: "%s"; 
-            -fx-font-size: 26px;
-        """.formatted(mineFamily);
+                    -fx-text-fill: white; 
+                    -fx-font-family: "%s"; 
+                    -fx-font-size: 26px;
+                """.formatted(mineFamily);
 
         // Style for Pause Button
         String pauseBtnStyle = """
@@ -633,6 +636,43 @@ public class Main extends Application {
             }
         });
 
+
+
+
+        // Game Over Overlay
+        gameOverMessage = new Text();
+        gameOverMessage.setFill(Color.WHITE);
+        gameOverMessage.setFont(Font.font("Arial", 64));
+
+        Button restartBtn = new Button("Restart");
+        Button mainMenuBtn = new Button("Main Menu");
+
+        restartBtn.setOnAction(e -> {
+            gameOverOverlay.setVisible(false);
+            timeline.stop();
+            showBoardScene(); // restart game
+        });
+
+        mainMenuBtn.setOnAction(e -> {
+            gameOverOverlay.setVisible(false);
+            timeline.stop();
+            showMenuScene(); // back to menu
+        });
+
+        VBox menuBox = new VBox(20, restartBtn, mainMenuBtn);
+        menuBox.setAlignment(Pos.CENTER);
+
+        VBox overlayContent = new VBox(40, gameOverMessage, menuBox);
+        overlayContent.setAlignment(Pos.CENTER);
+
+        gameOverOverlay = new StackPane(overlayContent);
+        gameOverOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.75);");
+        gameOverOverlay.setVisible(false);
+        gameOverOverlay.setAlignment(Pos.CENTER);
+
+
+        root.getChildren().add(gameOverOverlay);
+
         // --- TIMELINE ---
         timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), e -> {
@@ -643,12 +683,15 @@ public class Main extends Application {
                     if (game.isGameOver()) {
                         timeline.stop();
                         SoundManager.playSound("defeat");
+                        gameOverMessage.setText(game.getStatusMessage());
+                        gameOverOverlay.setVisible(true);
                     }
                 })
         );
 
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
+
     }
 
     private void updateBoard(GridPane boardGui) {
@@ -1054,17 +1097,12 @@ public class Main extends Application {
 
 
     private void showGameOverDialog() {
-        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-        alert.setTitle("Game Over");
-        alert.setHeaderText(null);
-        alert.setContentText(game.getStatusMessage());
 
-        alert.showAndWait().ifPresent(response -> {
-            if (response == javafx.scene.control.ButtonType.OK) {
-                showMenuScene();
-                this.game = null;
-            }
-        });
+        if (game.isGameOver()) {
+            timeline.stop(); // stop timers
+            gameOverMessage.setText(game.getStatusMessage());
+            gameOverOverlay.setVisible(true);
+        }
     }
 
     private void togglePause() {

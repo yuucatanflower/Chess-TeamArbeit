@@ -18,6 +18,7 @@ public class GameState {
     private boolean isGameOver;
     private String statusMessage;
     private long incrementMs = 0; // in milliseconds
+    private Color winnerColor = null; // null if draw or ongoing
 
 
     // ---  Constructor ---
@@ -331,6 +332,7 @@ public class GameState {
             statusMessage = currentTurn + " to move";
         }
     }
+
 
     private boolean canCastle(Color color, boolean kingSide) {
 
