@@ -2,6 +2,7 @@ package com.easteurope.chess;
 
 import com.easteurope.chess.controller.Stockfish;
 import com.easteurope.chess.model.Piece;
+import com.easteurope.chess.view.BackgroundEffect;
 import com.easteurope.chess.view.ImageLoader;
 import com.easteurope.chess.view.SoundManager; // Added SoundManager import
 import javafx.application.Application;
@@ -162,9 +163,9 @@ public class Main extends Application {
 
     // SCREEN 1: START MENU
     private void showMenuScene() {
-        VBox layout = new VBox(30);
-        layout.setAlignment(Pos.CENTER);
-        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #233447, #1b2838);");
+        VBox content = new VBox(30);
+        content.setAlignment(Pos.CENTER);
+        //layout.setStyle("-fx-background-color: linear-gradient(to bottom, #233447, #1b2838);");
 
         Label title = new Label("CHESS");
         title.setStyle("-fx-font-size: 64px; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -236,8 +237,22 @@ public class Main extends Application {
             showSettingsScene();
         });
 
-        layout.getChildren().addAll(title, playBtn, settingsBtn, musicBtn, exitBtn);
-        Scene scene = new Scene(layout, 800, 600);
+        // 1. Add the buttons to the VBox
+        content.getChildren().addAll(title, playBtn, settingsBtn, musicBtn, exitBtn);
+
+        // 2. Create the Animated Background
+        Pane animatedBg = BackgroundEffect.createAnimatedBackground();
+
+        // 3. Stack the UI on top of the Background
+        StackPane root = new StackPane();
+
+        // Layer 1: The background (at the back)
+        root.getChildren().add(animatedBg);
+
+        // Layer 2: The VBox containing the buttons (at the front)
+        root.getChildren().add(content);
+
+        Scene scene = new Scene(root, 800, 600);
         window.setScene(scene);
         window.show();
     }
@@ -246,7 +261,7 @@ public class Main extends Application {
     private void showSetupScene() {
         VBox layout = new VBox(30);
         layout.setAlignment(Pos.CENTER);
-        layout.setStyle("-fx-background-color: #34495e;");
+        //layout.setStyle("-fx-background-color: #34495e;");
         layout.setPadding(new Insets(20));
 
         Label title = new Label("Bot Selection + Time Control");
@@ -387,9 +402,7 @@ public class Main extends Application {
 
         layout.getChildren().addAll(title, bots, new Label("Select time control:"), timeControls, startBtn);
 
-        window.setScene(new Scene(layout, 800, 600));
-
-        // increments
+        // Increments
         HBox incrementControls = new HBox(20);
         incrementControls.setAlignment(Pos.CENTER);
 
@@ -427,11 +440,130 @@ public class Main extends Application {
 
 
         layout.getChildren().addAll(new Label("Select increment:"), incrementControls);
-
         incrementControls.getChildren().addAll(inc0, inc5, inc10);
 
+        // --- ANIMATION START ---
+        Pane animatedBg = BackgroundEffect.createAnimatedBackground();
+        StackPane root = new StackPane();
+        root.getChildren().add(animatedBg); // Layer 1
+        root.getChildren().add(layout);     // Layer 2
+        // --- ANIMATION END ---
+
+        window.setScene(new Scene(root, 800, 600));
     }
 
+    // SCREEN 3: GAME BOARD
+    private void showBoardScene() {
+        game = new GameState(selectedTimeMs, selectedColor, selectedIncrementMs);
+
+        BorderPane uiLayout = new BorderPane();
+        uiLayout.setStyle("-fx-background-color: transparent;");
+
+        // --- GAME STACK (Board Layer) ---
+        StackPane boardStack = new StackPane();
+
+        // LAYER 1: VISUALS (Bottom)
+        // Only renders images. Mouse events are disabled here.
+        GridPane boardGui = new GridPane();
+        boardGui.setAlignment(Pos.CENTER);
+        boardGui.setMouseTransparent(true); // CRITICAL: Makes all images "ghosts" to the mouse.
+
+        // LAYER 2: INPUT (Top)
+        // An invisible grid that captures clicks.
+        GridPane inputGrid = new GridPane();
+        inputGrid.setAlignment(Pos.CENTER);
+        setupInputLayer(inputGrid, boardGui); // Helper method to build the invisible grid
+
+        // Stack them: Input goes ON TOP of Visuals
+        boardStack.getChildren().addAll(boardGui, inputGrid);
+
+        // Initial render of the board visuals
+        updateBoard(boardGui);
+
+        uiLayout.setCenter(boardStack);
+        // ---- PAUSE OVERLAY ----
+        pauseOverlay = buildPauseOverlay();
+        pauseOverlay.setVisible(false);
+        boardStack.getChildren().add(pauseOverlay);
+
+
+        // --- HISTORY ---
+        historyArea = new TextArea();
+        historyArea.setEditable(false);
+        historyArea.setPrefHeight(400);
+
+        VBox sidebar = new VBox(10);
+        sidebar.setPadding(new Insets(10));
+        sidebar.setPrefWidth(200);
+
+        Label historyLabel = new Label("Move Order");
+        historyLabel.setTextFill(Color.WHITE);
+
+        sidebar.getChildren().addAll(historyLabel, historyArea);
+        uiLayout.setRight(sidebar);
+
+
+        // --- TIMER ---
+        HBox topBar = new HBox(100);
+        topBar.setAlignment(Pos.CENTER);
+        topBar.setPadding(new Insets(10));
+
+        whiteTimeLabel = new Label();
+        blackTimeLabel = new Label();
+
+        whiteTimeLabel.setText("White: " + formatTime(game.getWhiteTimeMs()));
+        blackTimeLabel.setText("Black: " + formatTime(game.getBlackTimeMs()));
+
+        whiteTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+        blackTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+
+        topBar.getChildren().addAll(blackTimeLabel, whiteTimeLabel);
+        Button pauseBtn = new Button("≡");
+        pauseBtn.setOnAction(e -> togglePause());
+        pauseBtn.setStyle("-fx-font-size: 18px; -fx-text-fill: white; -fx-background-color: #7f8c8d;");
+        topBar.getChildren().add(pauseBtn);
+
+        uiLayout.setTop(topBar);
+
+        // --- FINAL ASSEMBLY ---
+        Pane animatedBg = BackgroundEffect.createAnimatedBackground();
+        StackPane root = new StackPane();
+
+        root.getChildren().add(animatedBg);  // Bottom: Animation
+        root.getChildren().add(uiLayout);    // Middle: Game UI
+        root.getChildren().add(pauseOverlay);// Top: Pause Menu (Hidden by default)
+
+        window.setScene(new Scene(root, 900, 700));
+        window.getScene().setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case ESCAPE -> togglePause();
+            }
+        });
+
+
+        // --- TIMELINE ---
+        timeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), e -> {
+
+                    game.tickTimer();   // time runs
+
+                    whiteTimeLabel.setText(
+                            "White: " + formatTime(game.getWhiteTimeMs())
+                    );
+                    blackTimeLabel.setText(
+                            "Black: " + formatTime(game.getBlackTimeMs())
+                    );
+
+                    if (game.isGameOver()) {
+                        timeline.stop();
+                        SoundManager.playSound("defeat"); // Sound on time out
+                    }
+                })
+        );
+
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
+    }
 
     private HBox chooseColor() {
 
@@ -514,114 +646,6 @@ public class Main extends Application {
 
         Scene scene = new Scene(layout, 900, 700);
         window.setScene(scene);
-    }
-
-    // SCREEN 3: GAME BOARD
-    private void showBoardScene() {
-        game = new GameState(selectedTimeMs, selectedColor, selectedIncrementMs);
-
-
-        BorderPane layout = new BorderPane();
-        layout.setStyle("-fx-background-color: #2c3e50;");
-
-        // --- KEY CONCEPT: STACKPANE FOR LAYERING ---
-        StackPane gameStack = new StackPane();
-
-        // LAYER 1: VISUALS (Bottom)
-        // Only renders images. Mouse events are disabled here.
-        GridPane boardGui = new GridPane();
-        boardGui.setAlignment(Pos.CENTER);
-        boardGui.setMouseTransparent(true); // CRITICAL: Makes all images "ghosts" to the mouse.
-
-        // LAYER 2: INPUT (Top)
-        // An invisible grid that captures clicks.
-        GridPane inputGrid = new GridPane();
-        inputGrid.setAlignment(Pos.CENTER);
-        setupInputLayer(inputGrid, boardGui); // Helper method to build the invisible grid
-
-        // Stack them: Input goes ON TOP of Visuals
-        gameStack.getChildren().addAll(boardGui, inputGrid);
-
-        // Initial render of the board visuals
-        updateBoard(boardGui);
-
-        layout.setCenter(gameStack);
-        // ---- PAUSE OVERLAY ----
-        pauseOverlay = buildPauseOverlay();
-        pauseOverlay.setVisible(false);
-        gameStack.getChildren().add(pauseOverlay);
-
-
-        // --- HISTORY ---
-
-        historyArea = new TextArea();
-        historyArea.setEditable(false);
-        historyArea.setPrefHeight(400);
-
-        VBox sidebar = new VBox(10);
-        sidebar.setPadding(new Insets(10));
-        sidebar.setStyle("-fx-background-color: #34495e;");
-        sidebar.setPrefWidth(200);
-
-        Label historyLabel = new Label("Move Order");
-        historyLabel.setTextFill(Color.WHITE);
-
-        sidebar.getChildren().addAll(historyLabel, historyArea);
-        layout.setRight(sidebar);
-
-
-        // --- TIMER ---
-        HBox topBar = new HBox(100);
-        topBar.setAlignment(Pos.CENTER);
-        topBar.setPadding(new Insets(10));
-
-        whiteTimeLabel = new Label();
-        blackTimeLabel = new Label();
-
-        whiteTimeLabel.setText("White: " + formatTime(game.getWhiteTimeMs()));
-        blackTimeLabel.setText("Black: " + formatTime(game.getBlackTimeMs()));
-
-        whiteTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-        blackTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-
-        topBar.getChildren().addAll(blackTimeLabel, whiteTimeLabel);
-        Button pauseBtn = new Button("≡");
-        pauseBtn.setOnAction(e -> togglePause());
-        pauseBtn.setStyle("-fx-font-size: 18px; -fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        topBar.getChildren().add(pauseBtn);
-
-        layout.setTop(topBar);
-
-        window.setScene(new Scene(layout, 900, 700));
-        window.getScene().setOnKeyPressed(e -> {
-            switch (e.getCode()) {
-                case ESCAPE -> togglePause();
-            }
-        });
-
-
-        // --- TIMELINE ---
-        timeline = new Timeline(
-                new KeyFrame(Duration.seconds(1), e -> {
-
-                    game.tickTimer();   // time runs
-
-                    whiteTimeLabel.setText(
-                            "White: " + formatTime(game.getWhiteTimeMs())
-                    );
-                    blackTimeLabel.setText(
-                            "Black: " + formatTime(game.getBlackTimeMs())
-                    );
-
-                    if (game.isGameOver()) {
-                        timeline.stop();
-                        SoundManager.playSound("defeat"); // Sound on time out
-                    }
-                })
-        );
-
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
     }
 
     private String formatTime(long ms) {
@@ -865,6 +889,18 @@ public class Main extends Application {
     }
 
     private void updateBoard(GridPane boardGui) {
+        // Forces the GridPane to only be as big as the tiles
+        // This prevents the border from floating at the edge of the window
+        boardGui.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+        // Ensures tiles are centered and touching each other
+        boardGui.setAlignment(Pos.CENTER);
+        boardGui.setHgap(0);
+        boardGui.setVgap(0);
+
+        // Applies a black border around the entire grid
+        boardGui.setStyle("-fx-border-color: black; -fx-border-width: 5; -fx-border-style: solid;");
+
         boardGui.getChildren().clear(); // Clear old visuals
 
         for (int row = 0; row < 8; row++) {
