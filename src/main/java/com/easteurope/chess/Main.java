@@ -327,10 +327,10 @@ public class Main extends Application {
 
             // Bot names, can be changed anytime
             String botName = switch (i) {
-                case 1 -> "name1";
-                case 2 -> "name2";
-                case 3 -> "name3";
-                case 4 -> "name4";
+                case 1 -> "Ember Wizard";
+                case 2 -> "Guard Knight";
+                case 3 -> "Omen Seer";
+                case 4 -> "Rune Lord";
                 default -> "";
             };
 
