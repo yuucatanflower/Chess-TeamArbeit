@@ -444,11 +444,8 @@ public class Main extends Application {
     private void showBoardScene() {
         game = new GameState(selectedTimeMs, selectedColor, selectedIncrementMs);
 
-        BorderPane uiLayout = new BorderPane();
-        uiLayout.setStyle("-fx-background-color: transparent;");
-
+        // --- 1. SETUP BOARD ---
         StackPane boardStack = new StackPane();
-
         GridPane boardGui = new GridPane();
         boardGui.setAlignment(Pos.CENTER);
         boardGui.setMouseTransparent(true);
@@ -458,56 +455,48 @@ public class Main extends Application {
         setupInputLayer(inputGrid, boardGui);
 
         boardStack.getChildren().addAll(boardGui, inputGrid);
-
         updateBoard(boardGui);
 
-        uiLayout.setCenter(boardStack);
         pauseOverlay = buildPauseOverlay();
         pauseOverlay.setVisible(false);
-        boardStack.getChildren().add(pauseOverlay);
 
-
+        // --- 2. SETUP SIDEBAR (RIGHT) ---
         historyArea = new TextArea();
         historyArea.setEditable(false);
-        // Made preferred height smaller to fit a "square" look alongside the board padding
-        historyArea.setPrefHeight(200); // Decreased height
 
-        // --- Transparent Style ---
+        // FIX 1: Increased height significantly so no scrollbar appears
+        historyArea.setPrefHeight(500);
+        historyArea.setWrapText(true);
+
         historyArea.setStyle("""
             -fx-control-inner-background: transparent;
             -fx-background-color: transparent;
             -fx-text-fill: white;
             -fx-font-family: 'Consolas', 'Monospaced';
-            -fx-font-size: 16px;
+            -fx-font-size: 14px;
             -fx-highlight-fill: transparent;
             -fx-highlight-text-fill: white;
         """);
-        // To remove the scrollpane border/background inside TextArea structure
         historyArea.getStylesheets().add("data:text/css," +
-                ".text-area .scroll-pane { -fx-background-color: transparent; -fx-hbar-policy: never; }" + // Hide horizontal scrollbar
+                ".text-area .scroll-pane { -fx-background-color: transparent; -fx-hbar-policy: never; -fx-vbar-policy: never; }" +
                 ".text-area .scroll-pane .viewport { -fx-background-color: transparent; }" +
                 ".text-area .content { -fx-background-color: transparent; }"
         );
 
         VBox sidebar = new VBox(10);
-        // --- INCREASED PADDING ---
-        // Top and Bottom padding increased to make it smaller in height visually
         sidebar.setPadding(new Insets(10, 15, 10, 15));
-        sidebar.setPrefWidth(240); // Slightly wider to avoid horizontal scroll
-        // More transparent backing for readability
-        sidebar.setStyle("-fx-background-color: rgba(0, 0, 0, 0.15);");
-
-        // --- TOP_CENTER ALIGNMENT ---
+        sidebar.setPrefWidth(300);
+        // Added a slight background so you can see it touches the top
+        sidebar.setStyle("-fx-background-color: rgba(0, 0, 0, 0.1);");
         sidebar.setAlignment(Pos.TOP_CENTER);
 
-        Label historyLabel = new Label("");
+        Label historyLabel = new Label(""); // keep empty!
         historyLabel.setTextFill(Color.WHITE);
         historyLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
 
         sidebar.getChildren().addAll(historyLabel, historyArea);
-        uiLayout.setRight(sidebar);
 
-
+        // --- 3. SETUP TOP BAR (TIMERS) ---
         HBox topBar = new HBox(100);
         topBar.setAlignment(Pos.CENTER);
         topBar.setPadding(new Insets(10));
@@ -521,21 +510,34 @@ public class Main extends Application {
         whiteTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
         blackTimeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
 
-        topBar.getChildren().addAll(blackTimeLabel, whiteTimeLabel);
         Button pauseBtn = new Button("≡");
         pauseBtn.setOnAction(e -> togglePause());
         pauseBtn.setStyle("-fx-font-size: 18px; -fx-text-fill: white; -fx-background-color: #7f8c8d;");
-        topBar.getChildren().add(pauseBtn);
 
-        uiLayout.setTop(topBar);
+        topBar.getChildren().addAll(blackTimeLabel, whiteTimeLabel, pauseBtn);
+
+        // --- 4. LAYOUT COMPOSITION ---
+
+        // Inner Pane: Holds Timers (Top) and Board (Center)
+        BorderPane gameArea = new BorderPane();
+        gameArea.setTop(topBar);
+        gameArea.setCenter(boardStack);
+
+        // Outer Pane: Holds Sidebar (Right) and GameArea (Center)
+        // FIX 2: Putting sidebar in the Outer Pane allows it to touch the top
+        BorderPane uiLayout = new BorderPane();
+        uiLayout.setStyle("-fx-background-color: transparent;");
+
+        uiLayout.setCenter(gameArea);
+        uiLayout.setRight(sidebar);
 
         // --- FINAL ASSEMBLY ---
         Pane animatedBg = BackgroundEffect.createAnimatedBackground();
         StackPane root = new StackPane();
 
-        root.getChildren().add(animatedBg);  // Bottom: Animation
-        root.getChildren().add(uiLayout);    // Middle: Game UI
-        root.getChildren().add(pauseOverlay);// Top: Pause Menu (Hidden by default)
+        root.getChildren().add(animatedBg);
+        root.getChildren().add(uiLayout);
+        root.getChildren().add(pauseOverlay);
 
         window.setScene(new Scene(root, 900, 700));
         window.getScene().setOnKeyPressed(e -> {
@@ -544,27 +546,19 @@ public class Main extends Application {
             }
         });
 
-
         // --- TIMELINE ---
         timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), e -> {
-
-                    game.tickTimer();   // time runs
-
-                    whiteTimeLabel.setText(
-                            "White: " + formatTime(game.getWhiteTimeMs())
-                    );
-                    blackTimeLabel.setText(
-                            "Black: " + formatTime(game.getBlackTimeMs())
-                    );
+                    game.tickTimer();
+                    whiteTimeLabel.setText("White: " + formatTime(game.getWhiteTimeMs()));
+                    blackTimeLabel.setText("Black: " + formatTime(game.getBlackTimeMs()));
 
                     if (game.isGameOver()) {
                         timeline.stop();
-                        SoundManager.playSound("defeat"); // Sound on time out
+                        SoundManager.playSound("defeat");
                     }
                 })
         );
-
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
     }
@@ -670,7 +664,7 @@ public class Main extends Application {
         musicBtn.setOnAction(e -> {
             SoundManager.toggleMusic();
             SoundManager.playSound("click");
-            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
+            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: OFF" : "MUSIC: ON");
         });
         musicBtn.setOnMouseEntered(e -> musicBtn.setStyle(btnStyleHover));
         musicBtn.setOnMouseExited(e -> musicBtn.setStyle(btnStyle));
