@@ -644,8 +644,6 @@ public class Main extends Application {
         });
 
 
-
-
         // Game Over Overlay
         gameOverMessage = new Text();
         gameOverMessage.setFill(Color.WHITE);
@@ -788,17 +786,15 @@ public class Main extends Application {
         btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
 
         btnW.setOnAction(e -> {
-            SoundManager.playSound("click");
             selectedColor = com.easteurope.chess.model.coreData.Color.WHITE;
-            btnW.setStyle("-fx-background-color: #ffffff;");
+            btnW.setStyle("-fx-background-color: #ffffff; -fx-text-fill: black;");
             btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
 
         btnB.setOnAction(e -> {
-            SoundManager.playSound("click");
             selectedColor = com.easteurope.chess.model.coreData.Color.BLACK;
-            btnB.setStyle("-fx-background-color: #ffffff;");
-            btnW.setStyle("-fx-background-color: #7f8c8d;");
+            btnB.setStyle("-fx-background-color: #ffffff; -fx-text-fill: black;");
+            btnW.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
 
         colorControl.getChildren().addAll(btnW, btnB);
@@ -924,8 +920,7 @@ public class Main extends Application {
                         moveNumber,
                         whiteMove
                 ));
-            }
-            else {
+            } else {
                 sb.append(String.format(
                         " %-10s%n",
                         moveText
@@ -961,8 +956,7 @@ public class Main extends Application {
                 possibleMoves = piece.getValidMoves(game.getBoard());
                 updateBoard(boardGui);
             }
-        }
-        else {
+        } else {
             if (clickedPos.equals(selectedPosition)) {
                 selectedPosition = null;
                 possibleMoves.clear();
