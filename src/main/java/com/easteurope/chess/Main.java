@@ -15,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider; // Added Slider import
 import javafx.scene.control.TextArea;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -1006,6 +1007,15 @@ public class Main extends Application {
 
         // Applies a black border around the entire grid
         boardGui.setStyle("-fx-border-color: black; -fx-border-width: 5; -fx-border-style: solid;");
+
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.rgb(0, 0, 0, 0.6)); // Black with 60% opacity
+        shadow.setRadius(70);                     // How "fuzzy" the shadow is (higher = softer)
+        shadow.setSpread(0.4);                    // How thick the shadow is
+        shadow.setOffsetX(10);                    // Shift slightly right
+        shadow.setOffsetY(10);                    // Shift slightly down
+
+        boardGui.setEffect(shadow);
 
         boardGui.getChildren().clear(); // Clear old visuals
 
