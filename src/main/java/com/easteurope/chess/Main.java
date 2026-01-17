@@ -467,7 +467,8 @@ public class Main extends Application {
 
     // SCREEN 3: GAME BOARD
     private void showBoardScene() {
-        game = new GameState(selectedTimeMs, selectedColor, selectedIncrementMs);
+        game = new GameState(selectedTimeMs, com.easteurope.chess.model.coreData.Color.WHITE, selectedIncrementMs);
+
 
         // --- LOAD FONTS  ---
 
@@ -524,6 +525,12 @@ public class Main extends Application {
 
         boardStack.getChildren().addAll(boardGui, inputGrid);
         updateBoard(boardGui);
+        if (selectedColor == com.easteurope.chess.model.coreData.Color.BLACK) {
+            if (selectedBotLevel > 0) {
+                isBotTurn = true;
+                Platform.runLater(() -> makeBotMove(boardGui));
+            }
+        }
 
         // --- 3. SETUP TIMERS (Left of Board) ---
         whiteTimeLabel = new Label();
