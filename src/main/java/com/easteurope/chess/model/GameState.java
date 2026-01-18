@@ -19,6 +19,9 @@ public class GameState {
     private String statusMessage;
     private long incrementMs = 0; // in milliseconds
     private Color winnerColor = null; // null if draw or ongoing
+    private boolean isPaused = false;
+    private long pauseStartTimestamp = 0;
+
 
 
     // ---  Constructor ---
@@ -37,6 +40,23 @@ public class GameState {
         this.blackTimeMs = startTimeMs;
         this.lastMoveTimestamp = System.currentTimeMillis();
     }
+
+    public void pause() {
+        if (!isPaused) {
+            isPaused = true;
+            pauseStartTimestamp = System.currentTimeMillis();
+        }
+    }
+
+
+    public void resume() {
+        if (isPaused) {
+            long pausedDuration = System.currentTimeMillis() - pauseStartTimestamp;
+            lastMoveTimestamp += pausedDuration; // ключевая строка!
+            isPaused = false;
+        }
+    }
+
 
     // --- Timer ---
     private long whiteTimeMs;
@@ -455,7 +475,7 @@ public class GameState {
     }
     public void tickTimer() {
         if (isGameOver) return;
-
+        if (isPaused || isGameOver()) return;
         long now = System.currentTimeMillis();
         long elapsed = now - lastMoveTimestamp;
 
