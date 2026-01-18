@@ -124,19 +124,12 @@ public class SetupScene {
 
         bots.getChildren().add(pvpBtn);
 
-
+        // Bot portraits
         for (int i = 1; i <= 4; i++) {
             final int level = i;
             String imagePath = "/images/bot" + i + ".png";
-
-            // Check if image exists to prevent crash
             Image image;
-            try {
-                image = new Image(getClass().getResource(imagePath).toString());
-            } catch (Exception ex) {
-                // Fallback if image missing
-                image = null;
-            }
+            image = new Image(getClass().getResource(imagePath).toString());
 
             Button portraitBtn = new Button(getBotName(i));
             if (image != null) {
