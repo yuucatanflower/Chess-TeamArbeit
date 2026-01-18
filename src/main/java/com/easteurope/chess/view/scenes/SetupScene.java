@@ -106,6 +106,13 @@ public class SetupScene {
                 Objects.requireNonNull(getClass().getResourceAsStream("/images/pvp.png"))
         );
 
+        pvpBtn.setOnAction(e -> {
+            selectedBotLevel = 0;
+            SoundManager.playSound("click");
+            pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
+            for (Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        });
+
         ImageView pvpView = new ImageView(pvpImage);
         pvpView.setFitWidth(90);
         pvpView.setFitHeight(90);
