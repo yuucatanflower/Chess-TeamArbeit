@@ -88,7 +88,7 @@ public class SettingsScene {
         musicBtn.setOnAction(e -> {
             SoundManager.toggleMusic();
             SoundManager.playSound("click");
-            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: ON" : "MUSIC: OFF");
+            musicBtn.setText(SoundManager.isMusicPlaying() ? "MUSIC: OFF" : "MUSIC: ON");
         });
         musicBtn.setOnMouseEntered(e -> musicBtn.setStyle(btnStyle));
         musicBtn.setOnMouseExited(e -> musicBtn.setStyle(btnStyle));
