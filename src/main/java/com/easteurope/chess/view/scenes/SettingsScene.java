@@ -73,7 +73,7 @@ public class SettingsScene {
         themeButtons.setAlignment(Pos.CENTER);
 
         Button theme1Btn = new Button("Darko");
-        theme1Btn.setStyle("-fx-background-color: #243B55; -fx-text-fill: white; -fx-font-size: 14px;");
+        theme1Btn.setStyle("-fx-background-color: #242f55; -fx-text-fill: white; -fx-font-size: 14px;");
         theme1Btn.setOnAction(e -> { applyTheme(1, root); SoundManager.playSound("click"); });
 
         Button theme2Btn = new Button("Sunset");
@@ -81,7 +81,7 @@ public class SettingsScene {
         theme2Btn.setOnAction(e -> { applyTheme(2, root); SoundManager.playSound("click"); });
 
         Button theme3Btn = new Button("Heaven");
-        theme3Btn.setStyle("-fx-background-color: #203a43; -fx-text-fill: white; -fx-font-size: 14px;");
+        theme3Btn.setStyle("-fx-background-color: #6dc0de; -fx-text-fill: white; -fx-font-size: 14px;");
         theme3Btn.setOnAction(e -> { applyTheme(3, root); SoundManager.playSound("click"); });
 
         // NEW BUTTON: Zombie Theme
