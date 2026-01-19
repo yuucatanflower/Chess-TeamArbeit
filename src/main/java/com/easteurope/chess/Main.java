@@ -42,7 +42,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         this.window = primaryStage;
-        window.setTitle("Chess TeamArbeit");
+        window.setTitle("C.");
 
         // Load audio once at startup
         SoundManager.loadSounds();

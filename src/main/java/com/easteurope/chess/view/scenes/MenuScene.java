@@ -7,7 +7,6 @@ import javafx.animation.Interpolator;
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -48,16 +47,18 @@ public class MenuScene {
         Font customFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 28);
         String fontFamily = (customFont != null) ? customFont.getFamily() : "Arial";
 
+        // Added drop shadow: black (opaque), 0 radius (no blur), -4 offset X (left), 4 offset Y (down)
         String btnStyle = """
                 -fx-background-color: white;
                 -fx-text-fill: #233447;
                 -fx-font-family: "%s";
                 -fx-font-size: 30px;
-                -fx-padding: 8 24;
+                -fx-padding: 2 2; 
                 -fx-border-color: white;
-                -fx-border-width: 2;
-                -fx-border-radius: 6;
-                -fx-background-radius: 6;
+                -fx-border-width: 1;
+                -fx-border-radius: 1;
+                -fx-background-radius: 1;
+                -fx-effect: dropshadow(one-pass-box, black, 0, 0, -4, 4);
             """.formatted(fontFamily);
 
         Button playBtn = new Button("PLAY");
@@ -71,7 +72,7 @@ public class MenuScene {
         // --- Actions ---
         playBtn.setOnAction(e -> {
             SoundManager.playSound("click");
-            mainApp.showSetupView(); // Update main navigation call
+            mainApp.showSetupView();
         });
 
         settingsBtn.setOnAction(e -> {
@@ -89,6 +90,6 @@ public class MenuScene {
         StackPane root = new StackPane();
         root.getChildren().addAll(BackgroundEffect.createAnimatedBackground(), content);
 
-        return root; // Return the StackPane directly
+        return root;
     }
 }

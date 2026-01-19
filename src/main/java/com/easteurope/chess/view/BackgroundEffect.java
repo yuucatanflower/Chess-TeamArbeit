@@ -1,5 +1,6 @@
 package com.easteurope.chess.view;
 
+import com.easteurope.chess.view.scenes.SettingsScene;
 import javafx.animation.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -9,38 +10,68 @@ import javafx.util.Duration;
 
 public class BackgroundEffect {
 
+    // Overload: If no ID provided, use the current global theme
     public static Pane createAnimatedBackground() {
+        return createAnimatedBackground(SettingsScene.currentTheme);
+    }
+
+    // Main method: Creates background for specific theme
+    public static Pane createAnimatedBackground(int themeId) {
         StackPane backgroundPane = new StackPane();
 
-        // 1. DIMENSIONS
         double width = 3000;
         double height = 4000;
-        double scrollDistance = 1080; // The distance we move before looping
+        double scrollDistance = 1080;
 
         Rectangle bgRect = new Rectangle(width, height);
 
-        // 2. SEAMLESS GRADIENT
-        Stop[] stops = new Stop[] {
-                new Stop(0.0, Color.web("#141E30")),  // Deep Slate (Dark)
-                new Stop(0.5, Color.web("#243B55")),  // Navy (Lighter)
-                new Stop(1.0, Color.web("#141E30"))   // Deep Slate (Dark) - Matches Start
-        };
+        // --- DEFINE GRADIENTS BASED ON THEME ---
+        Stop[] stops;
+
+        switch (themeId) {
+            case 2: // Red Theme (Dark Red / Black)
+                stops = new Stop[] {
+                        new Stop(0.0, Color.web("#1a0505")), // Very Dark Red
+                        new Stop(0.5, Color.web("#4a0e0e")), // Deep Crimson
+                        new Stop(1.0, Color.web("#1a0505"))
+                };
+                break;
+            case 3: // Blue/Green Theme (Dark Teal / Cyan)
+                stops = new Stop[] {
+                        new Stop(0.0, Color.web("#1ed4bc")),
+                        new Stop(0.5, Color.web("#1ea7d4")),
+                        new Stop(1.0, Color.web("#1ed4bc"))
+                };
+                break;
+            case 4: //  Zombie Theme (Olive/Brown)
+                stops = new Stop[] {
+                        new Stop(0.0, Color.web("#3e522f")), // Dark Brownish-Olive
+                        new Stop(0.5, Color.web("#698750")), // Brighter Olive Green
+                        new Stop(1.0, Color.web("#3e522f"))  // Match Start
+                };
+                break;
+            default: // Theme 1 (Original Purple/Navy)
+                stops = new Stop[] {
+                        new Stop(0.0, Color.web("#141E30")),
+                        new Stop(0.5, Color.web("#243B55")),
+                        new Stop(1.0, Color.web("#141E30"))
+                };
+                break;
+        }
 
         LinearGradient gradient = new LinearGradient(
-                0, 0, 0, scrollDistance, // Start(0,0) -> End(0, 1080)
-                false,                   // Proportional = false (Use absolute pixels)
-                CycleMethod.REPEAT,      // Repeat this pattern vertically
+                0, 0, 0, scrollDistance,
+                false,
+                CycleMethod.REPEAT,
                 stops
         );
 
         bgRect.setFill(gradient);
 
-        // 3. DARK OVERLAY
-        // Keeps the text readable
+        // Dark Overlay
         Rectangle overlay = new Rectangle(width, height, Color.rgb(0, 0, 0, 0.4));
 
-        // 4. ANIMATION
-        // Move up by exactly one gradient loop length (1080px)
+        // Animation
         TranslateTransition tt = new TranslateTransition(Duration.seconds(40), bgRect);
         tt.setFromY(0);
         tt.setToY(-scrollDistance);
