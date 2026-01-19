@@ -9,6 +9,7 @@ import com.easteurope.chess.model.coreData.PieceType;
 import com.easteurope.chess.model.coreData.Position;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -26,7 +27,9 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GameScreen {
 
@@ -40,7 +43,10 @@ public class GameScreen {
     private TextArea historyArea;
     private Position selectedPosition = null;
 
-    // These come from Config now, but we keep the variables so the methods still work
+    // Captured Pieces Labels
+    private Label whiteCapturedLabel; // Shows pieces captured BY White
+    private Label blackCapturedLabel; // Shows pieces captured BY Black
+
     private long selectedTimeMs;
     private com.easteurope.chess.model.coreData.Color selectedColor;
     private long selectedIncrementMs;
@@ -59,12 +65,12 @@ public class GameScreen {
 
     // UI Reference
     private GridPane boardGui;
+    private DropShadow boardShadow;
 
     public GameScreen(Main mainApp, GameConfig config) {
         this.mainApp = mainApp;
         this.config = config;
 
-        // Unpack config into the variables the methods expect
         this.selectedTimeMs = config.timeMs();
         this.selectedIncrementMs = config.incrementMs();
         this.selectedColor = config.playerColor();
@@ -77,11 +83,9 @@ public class GameScreen {
         }
     }
 
-    // This replaces 'showBoardScene'
     public StackPane getView() {
         game = new GameState(selectedTimeMs, com.easteurope.chess.model.coreData.Color.WHITE, selectedIncrementMs);
 
-        // Initialize Bot
         if (selectedBotLevel > 0) {
             bot = new Stockfish();
             if (bot.startEngine()) {
@@ -92,18 +96,27 @@ public class GameScreen {
             }
         }
 
-        // --- LOAD FONTS  ---
+        // --- LOAD FONTS ---
         Font retroFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 24);
         String retroFamily = (retroFont != null) ? retroFont.getFamily() : "Arial";
 
         Font mineFont = Font.loadFont(getClass().getResourceAsStream("/Minecraftia-Regular.ttf"), 26);
         String mineFamily = (mineFont != null) ? mineFont.getFamily() : "Verdana";
 
+        Font chessFont = Font.loadFont(getClass().getResourceAsStream("/TT_USUAL.TTF"), 32);
+        String chessFamily = (chessFont != null) ? chessFont.getFamily() : "Serif";
+
         String timerStyle = """
                     -fx-text-fill: white; 
                     -fx-font-family: "%s"; 
                     -fx-font-size: 26px;
                 """.formatted(mineFamily);
+
+        String capturedStyle = """
+                    -fx-text-fill: white; 
+                    -fx-font-family: "%s"; 
+                    -fx-font-size: 32px;
+                """.formatted(chessFamily);
 
         String pauseBtnStyle = """
                     -fx-background-color: transparent;
@@ -129,17 +142,62 @@ public class GameScreen {
                     -fx-background-radius: 6;
                 """.formatted(retroFamily);
 
+        // --- 1. SETUP CAPTURED PIECES (Initialize these FIRST) ---
+        whiteCapturedLabel = new Label("");
+        blackCapturedLabel = new Label("");
+
+        whiteCapturedLabel.setStyle(capturedStyle);
+        blackCapturedLabel.setStyle(capturedStyle);
+
+        whiteCapturedLabel.setWrapText(true);
+        blackCapturedLabel.setWrapText(true);
+        whiteCapturedLabel.setMaxWidth(150);
+        blackCapturedLabel.setMaxWidth(150);
+
+        VBox capturedBox = new VBox();
+        Region capSpacer = new Region();
+        VBox.setVgrow(capSpacer, Priority.ALWAYS);
+
+        capturedBox.getChildren().addAll(blackCapturedLabel, capSpacer, whiteCapturedLabel);
+
+        capturedBox.setPrefHeight(600);
+        capturedBox.setMaxHeight(600);
+        capturedBox.setMinWidth(150);
+        capturedBox.setPrefWidth(150);
+        capturedBox.setAlignment(Pos.TOP_LEFT);
+        capturedBox.setPadding(new Insets(0, 0, 0, 30));
+
         // --- 2. SETUP BOARD ---
         StackPane boardStack = new StackPane();
-        this.boardGui = new GridPane(); // Initialize class field
+        this.boardGui = new GridPane();
         boardGui.setAlignment(Pos.CENTER);
         boardGui.setMouseTransparent(true);
+
+        // --- SHADOW SETUP ---
+        this.boardShadow = new DropShadow();
+        boardShadow.setColor(Color.rgb(0, 0, 0, 0.9)); // More opaque
+        boardShadow.setRadius(70);
+        boardShadow.setSpread(0.4);
+        boardShadow.setOffsetX(10);
+        boardShadow.setOffsetY(10);
+        boardGui.setEffect(boardShadow);
+
+        // Animation
+        Timeline shadowAnimation = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(boardShadow.offsetYProperty(), 10)),
+                new KeyFrame(Duration.seconds(2.0), new KeyValue(boardShadow.offsetYProperty(), 25))
+        );
+        shadowAnimation.setAutoReverse(true);
+        shadowAnimation.setCycleCount(Animation.INDEFINITE);
+        shadowAnimation.play();
 
         GridPane inputGrid = new GridPane();
         inputGrid.setAlignment(Pos.CENTER);
         setupInputLayer(inputGrid, boardGui);
 
         boardStack.getChildren().addAll(boardGui, inputGrid);
+
+        // --- SAFE TO UPDATE BOARD NOW ---
         updateBoard(boardGui);
 
         if (selectedColor == com.easteurope.chess.model.coreData.Color.BLACK) {
@@ -149,7 +207,7 @@ public class GameScreen {
             }
         }
 
-        // --- 3. SETUP TIMERS (Left of Board) ---
+        // --- 3. SETUP TIMERS ---
         whiteTimeLabel = new Label();
         blackTimeLabel = new Label();
 
@@ -174,9 +232,9 @@ public class GameScreen {
         // --- 4. CENTER AREA ---
         HBox centerContent = new HBox();
         centerContent.setAlignment(Pos.CENTER);
-        centerContent.getChildren().addAll(timerBox, boardStack);
+        centerContent.getChildren().addAll(timerBox, boardStack, capturedBox);
 
-        // --- 5. PAUSE BUTTON (Top Left) ---
+        // --- 5. PAUSE BUTTON ---
         Button pauseBtn = new Button(" II ");
         pauseBtn.setStyle(pauseBtnStyle);
 
@@ -186,9 +244,9 @@ public class GameScreen {
 
         StackPane topBar = new StackPane(pauseBtn);
         topBar.setAlignment(Pos.TOP_LEFT);
-        topBar.setPadding(new Insets(10));
+        topBar.setPadding(new Insets(20));
 
-        // --- 6. SIDEBAR (Right) ---
+        // --- 6. SIDEBAR ---
         historyArea = new TextArea();
         historyArea.setEditable(false);
         historyArea.setPrefHeight(600);
@@ -222,11 +280,15 @@ public class GameScreen {
         VBox.setVgrow(historyArea, Priority.ALWAYS);
 
         // --- 7. LAYOUT COMPOSITION ---
-        BorderPane gameLayout = new BorderPane();
-        gameLayout.setTop(topBar);
-        gameLayout.setCenter(centerContent);
-        gameLayout.setRight(sidebar);
-        gameLayout.setStyle("-fx-background-color: transparent;");
+        BorderPane gameContentLayout = new BorderPane();
+        gameContentLayout.setTop(topBar);
+        gameContentLayout.setCenter(centerContent);
+        gameContentLayout.setStyle("-fx-background-color: transparent;");
+
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setCenter(gameContentLayout);
+        mainLayout.setRight(sidebar);
+        mainLayout.setStyle("-fx-background-color: transparent;");
 
         // --- FINAL ASSEMBLY ---
         pauseOverlay = buildPauseOverlay();
@@ -236,7 +298,7 @@ public class GameScreen {
         StackPane root = new StackPane();
 
         root.getChildren().add(animatedBg);
-        root.getChildren().add(gameLayout);
+        root.getChildren().add(mainLayout);
         root.getChildren().add(pauseOverlay);
 
         // --- GAME OVER OVERLAY ---
@@ -250,14 +312,12 @@ public class GameScreen {
         restartBtn.setOnAction(e -> {
             gameOverOverlay.setVisible(false);
             timeline.stop();
-            // Call back to Main to restart
             mainApp.startGame(config);
         });
 
         mainMenuBtn.setOnAction(e -> {
             gameOverOverlay.setVisible(false);
             timeline.stop();
-            // Call back to Main to go to menu
             mainApp.showMenuView();
         });
 
@@ -296,8 +356,6 @@ public class GameScreen {
                 })
         );
         timeline.setCycleCount(Animation.INDEFINITE);
-        // We don't play immediately, we wait for 'startGameLoop()' call or play here
-        // original played immediately.
 
         return root;
     }
@@ -308,14 +366,6 @@ public class GameScreen {
         boardGui.setHgap(0);
         boardGui.setVgap(0);
         boardGui.setStyle("-fx-border-color: black; -fx-border-width: 5; -fx-border-style: solid;");
-
-        DropShadow shadow = new DropShadow();
-        shadow.setColor(Color.rgb(0, 0, 0, 0.6));
-        shadow.setRadius(70);
-        shadow.setSpread(0.4);
-        shadow.setOffsetX(10);
-        shadow.setOffsetY(10);
-        boardGui.setEffect(shadow);
 
         boardGui.getChildren().clear();
 
@@ -359,6 +409,75 @@ public class GameScreen {
 
                 boardGui.add(tile, col, row);
             }
+        }
+
+        // Update captured pieces text whenever board updates
+        updateCapturedPieces();
+    }
+
+    private void updateCapturedPieces() {
+        Map<PieceType, Integer> whitePieces = new HashMap<>();
+        Map<PieceType, Integer> blackPieces = new HashMap<>();
+
+        // Standard chess counts
+        whitePieces.put(PieceType.PAWN, 8); whitePieces.put(PieceType.ROOK, 2); whitePieces.put(PieceType.KNIGHT, 2);
+        whitePieces.put(PieceType.BISHOP, 2); whitePieces.put(PieceType.QUEEN, 1); whitePieces.put(PieceType.KING, 1);
+
+        blackPieces.putAll(whitePieces);
+
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = game.getBoard().getPieceAt(new Position(r, c));
+                if (p != null) {
+                    if (p.getColor() == com.easteurope.chess.model.coreData.Color.WHITE) {
+                        int count = whitePieces.getOrDefault(p.getType(), 0);
+                        if (count > 0) whitePieces.put(p.getType(), count - 1);
+                    } else {
+                        int count = blackPieces.getOrDefault(p.getType(), 0);
+                        if (count > 0) blackPieces.put(p.getType(), count - 1);
+                    }
+                }
+            }
+        }
+
+        StringBuilder whiteLost = new StringBuilder();
+        StringBuilder blackLost = new StringBuilder();
+
+        PieceType[] types = {PieceType.PAWN, PieceType.KNIGHT, PieceType.BISHOP, PieceType.ROOK, PieceType.QUEEN};
+
+        for (PieceType t : types) {
+            int missing = whitePieces.get(t);
+            for (int i = 0; i < missing; i++) whiteLost.append(getCharForPiece(t, true));
+        }
+
+        for (PieceType t : types) {
+            int missing = blackPieces.get(t);
+            for (int i = 0; i < missing; i++) blackLost.append(getCharForPiece(t, false));
+        }
+
+        blackCapturedLabel.setText(whiteLost.toString());
+        whiteCapturedLabel.setText(blackLost.toString());
+    }
+
+    private String getCharForPiece(PieceType type, boolean isWhite) {
+        if (isWhite) {
+            return switch (type) {
+                case PAWN -> "o";
+                case ROOK -> "t";
+                case KNIGHT -> "m";
+                case BISHOP -> "v";
+                case QUEEN -> "w";
+                case KING -> "l";
+            };
+        } else {
+            return switch (type) {
+                case PAWN -> "p";
+                case ROOK -> "r";
+                case KNIGHT -> "n";
+                case BISHOP -> "b";
+                case QUEEN -> "q";
+                case KING -> "k";
+            };
         }
     }
 
