@@ -19,6 +19,7 @@ import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SetupScene {
 
@@ -95,29 +96,40 @@ public class SetupScene {
         bots.setAlignment(Pos.CENTER);
         List<Button> botButtons = new ArrayList<>();
 
+
+        // PvP Button
         Button pvpBtn = new Button("PvP");
-        pvpBtn.setPrefSize(80, 80);
+        pvpBtn.setPrefSize(100, 120);
         pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
+
+        Image pvpImage = new Image(
+                Objects.requireNonNull(getClass().getResourceAsStream("/images/pvp.png"))
+        );
+
         pvpBtn.setOnAction(e -> {
             selectedBotLevel = 0;
             SoundManager.playSound("click");
             pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
             for (Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
         });
+
+        ImageView pvpView = new ImageView(pvpImage);
+        pvpView.setFitWidth(90);
+        pvpView.setFitHeight(90);
+        pvpView.setPreserveRatio(true);
+
+        pvpBtn.setGraphic(pvpView);
+        pvpBtn.setContentDisplay(ContentDisplay.TOP);
+        pvpBtn.setGraphicTextGap(5);
+
         bots.getChildren().add(pvpBtn);
 
+        // Bot portraits
         for (int i = 1; i <= 4; i++) {
             final int level = i;
             String imagePath = "/images/bot" + i + ".png";
-
-            // Check if image exists to prevent crash
             Image image;
-            try {
-                image = new Image(getClass().getResource(imagePath).toString());
-            } catch (Exception ex) {
-                // Fallback if image missing
-                image = null;
-            }
+            image = new Image(getClass().getResource(imagePath).toString());
 
             Button portraitBtn = new Button(getBotName(i));
             if (image != null) {
