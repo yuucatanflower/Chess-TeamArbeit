@@ -252,15 +252,17 @@ public class GameScreen {
         historyArea.setPrefHeight(600);
         historyArea.setWrapText(true);
 
+        // CHANGED: Use mineFamily (Minecraftia) and increased spacing/size slightly for readability
         historyArea.setStyle("""
                     -fx-control-inner-background: transparent;
                     -fx-background-color: transparent;
                     -fx-text-fill: white;
-                    -fx-font-family: 'Consolas', 'Monospaced';
+                    -fx-font-family: "%s"; 
                     -fx-font-size: 18px;
                     -fx-highlight-fill: transparent;
                     -fx-highlight-text-fill: white;
-                """);
+                """.formatted(mineFamily));
+
         historyArea.getStylesheets().add("data:text/css," +
                 ".text-area .scroll-pane { -fx-background-color: transparent; -fx-hbar-policy: never; -fx-vbar-policy: never; }" +
                 ".text-area .scroll-pane .viewport { -fx-background-color: transparent; }" +
@@ -541,6 +543,9 @@ public class GameScreen {
         }
 
         historyArea.setText(sb.toString());
+        // CHANGED: Scroll to bottom
+        historyArea.positionCaret(historyArea.getText().length());
+        historyArea.setScrollTop(Double.MAX_VALUE);
     }
 
     private void handleTileClick(int row, int col, GridPane boardGui) {

@@ -16,6 +16,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,11 @@ public class SetupScene {
     private Color selectedColor = Color.WHITE;
     private int selectedBotLevel = 0;
 
+    // Styles
+    private String timeSelected, timeUnselected;
+    private String botSelected, botUnselected, pvpSelected;
+    private String startStyle, startHover;
+
     public SetupScene(Main mainApp) {
         this.mainApp = mainApp;
     }
@@ -38,38 +45,84 @@ public class SetupScene {
     public StackPane getView() {
         VBox layout = new VBox(30);
 
-        String titleStyle = "-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;";
-        String sectionStyle = "-fx-text-fill: white; -fx-font-size: 16px;";
+        // --- 1. LOAD FONTS ---
+        Font mineFont = Font.loadFont(getClass().getResourceAsStream("/Minecraftia-Regular.ttf"), 16);
+        String mineFamily = (mineFont != null) ? mineFont.getFamily() : "Verdana";
 
-        // --- Time Buttons ---
+        Font retroFont = Font.loadFont(getClass().getResourceAsStream("/RetroByte.ttf"), 18);
+        String retroFamily = (retroFont != null) ? retroFont.getFamily() : "Arial";
+
+        // --- 2. DEFINE STYLES ---
+
+        // Label Styles (RetroByte)
+        String titleStyle = "-fx-text-fill: white; -fx-font-family: \"%s\"; -fx-font-size: 32px;".formatted(retroFamily);
+        String sectionStyle = "-fx-text-fill: white; -fx-font-family: \"%s\"; -fx-font-size: 20px;".formatted(retroFamily);
+
+        // Base Style Construction
+        String shadowEffect = "-fx-effect: dropshadow(one-pass-box, black, 0, 0, -4, 4);";
+        String commonBtn = "-fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 3; -fx-background-radius: 6; " + shadowEffect;
+
+        // A) MINECRAFTIA STYLES (Time, Increment, Bot Names, Colors)
+        String baseMineStyle = commonBtn + "-fx-font-family: \"%s\"; -fx-font-size: 16px;".formatted(mineFamily);
+
+        // Time & Increment
+        timeSelected = baseMineStyle + "-fx-background-color: white; -fx-text-fill: #233447;";
+        timeUnselected = baseMineStyle + "-fx-background-color: #7f8c8d; -fx-text-fill: white;";
+
+        // Bot Names (Minecraftia)
+        String baseBotStyle = commonBtn + "-fx-font-family: \"%s\"; -fx-font-size: 14px;".formatted(mineFamily);
+        botUnselected = baseBotStyle + "-fx-background-color: #7f8c8d; -fx-text-fill: white;";
+        String botActiveColor = "-fx-background-color: #27ae60; -fx-text-fill: white;";
+        String pvpActiveColor = "-fx-background-color: #533c98; -fx-text-fill: white;";
+
+        botSelected = baseBotStyle + botActiveColor;
+        pvpSelected = baseBotStyle + pvpActiveColor;
+
+        // B) START BUTTON STYLE (RetroByte)
+        String baseStartStyle = commonBtn + "-fx-font-family: \"%s\"; -fx-font-size: 24px; -fx-padding: 5 24;".formatted(retroFamily);
+        startStyle = baseStartStyle + "-fx-background-color: white; -fx-text-fill: #233447;";
+        // Hover: Transparent background
+        startHover = baseStartStyle + "-fx-background-color: transparent; -fx-text-fill: white;";
+
+
+        // --- Time Buttons (Minecraftia) ---
         Button btn1 = new Button("1m");
         Button btn5 = new Button("5m");
         Button btn10 = new Button("10m");
 
-        btn1.setStyle("-fx-background-color: #ffffff;");
-        btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-        btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        // Set Uniform Size for Buttons
+        btn1.setPrefSize(100, 40);
+        btn5.setPrefSize(100, 40);
+        btn10.setPrefSize(100, 40);
+
+        btn1.setAlignment(Pos.CENTER);
+        btn5.setAlignment(Pos.CENTER);
+        btn10.setAlignment(Pos.CENTER);
+
+        btn1.setStyle(timeSelected);
+        btn5.setStyle(timeUnselected);
+        btn10.setStyle(timeUnselected);
 
         btn1.setOnAction(e -> {
             selectedTimeMs = 60 * 1000;
             SoundManager.playSound("click");
-            btn1.setStyle("-fx-background-color: #ffffff;");
-            btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-            btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn1.setStyle(timeSelected);
+            btn5.setStyle(timeUnselected);
+            btn10.setStyle(timeUnselected);
         });
         btn5.setOnAction(e -> {
             selectedTimeMs = 5 * 60 * 1000;
             SoundManager.playSound("click");
-            btn5.setStyle("-fx-background-color: #ffffff;");
-            btn1.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-            btn10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn5.setStyle(timeSelected);
+            btn1.setStyle(timeUnselected);
+            btn10.setStyle(timeUnselected);
         });
         btn10.setOnAction(e -> {
             selectedTimeMs = 10 * 60 * 1000;
             SoundManager.playSound("click");
-            btn10.setStyle("-fx-background-color: #ffffff;");
-            btn1.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-            btn5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btn10.setStyle(timeSelected);
+            btn1.setStyle(timeUnselected);
+            btn5.setStyle(timeUnselected);
         });
 
         // --- Layout Setup ---
@@ -81,26 +134,32 @@ public class SetupScene {
 
         // --- Navigation Buttons ---
         Button backBtn = new Button("⮌");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 22px;");
-        backBtn.setOnAction(e -> mainApp.showMenuView()); // FIXED: Calls Main
+        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 28px;");
+        backBtn.setOnAction(e -> {
+            SoundManager.playSound("click");
+            mainApp.showMenuView();
+        });
 
         HBox backBox = new HBox();
         backBox.setAlignment(Pos.TOP_RIGHT);
         backBox.getChildren().add(backBtn);
 
         layout.getChildren().add(backBox);
-        layout.getChildren().add(chooseColor()); // Calls helper method below
 
-        // --- Bot Selection ---
+        // Color Selector (Now uses Minecraftia and uniform size)
+        layout.getChildren().add(createColorSelector());
+
+        // --- Bot Selection (Minecraftia) ---
         HBox bots = new HBox(20);
         bots.setAlignment(Pos.CENTER);
         List<Button> botButtons = new ArrayList<>();
 
-
         // PvP Button
         Button pvpBtn = new Button("PvP");
-        pvpBtn.setPrefSize(100, 120);
-        pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
+        pvpBtn.setPrefSize(150, 140); // INCREASED WIDTH
+        pvpBtn.setStyle(pvpSelected);
+        pvpBtn.setAlignment(Pos.CENTER);
+        pvpBtn.setTextAlignment(TextAlignment.CENTER);
 
         Image pvpImage = new Image(
                 Objects.requireNonNull(getClass().getResourceAsStream("/images/pvp.png"))
@@ -109,13 +168,13 @@ public class SetupScene {
         pvpBtn.setOnAction(e -> {
             selectedBotLevel = 0;
             SoundManager.playSound("click");
-            pvpBtn.setStyle("-fx-background-color: #533c98; -fx-text-fill: white;");
-            for (Button b : botButtons) b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            pvpBtn.setStyle(pvpSelected);
+            for (Button b : botButtons) b.setStyle(botUnselected);
         });
 
         ImageView pvpView = new ImageView(pvpImage);
-        pvpView.setFitWidth(90);
-        pvpView.setFitHeight(90);
+        pvpView.setFitWidth(80);
+        pvpView.setFitHeight(80);
         pvpView.setPreserveRatio(true);
 
         pvpBtn.setGraphic(pvpView);
@@ -128,34 +187,33 @@ public class SetupScene {
         for (int i = 1; i <= 4; i++) {
             final int level = i;
             String imagePath = "/images/bot" + i + ".png";
-            Image image;
-            image = new Image(getClass().getResource(imagePath).toString());
+            Image image = new Image(getClass().getResource(imagePath).toString());
 
             Button portraitBtn = new Button(getBotName(i));
-            if (image != null) {
-                ImageView imageView = new ImageView(image);
-                imageView.setFitWidth(90);
-                imageView.setFitHeight(90);
-                imageView.setPreserveRatio(true);
-                portraitBtn.setGraphic(imageView);
-                portraitBtn.setContentDisplay(ContentDisplay.TOP);
-                portraitBtn.setGraphicTextGap(5);
-            }
+            ImageView imageView = new ImageView(image);
+            imageView.setFitWidth(80);
+            imageView.setFitHeight(80);
+            imageView.setPreserveRatio(true);
+            portraitBtn.setGraphic(imageView);
+            portraitBtn.setContentDisplay(ContentDisplay.TOP);
+            portraitBtn.setGraphicTextGap(5);
 
-            portraitBtn.setPrefSize(100, 120);
-            portraitBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            portraitBtn.setPrefSize(150, 140); // INCREASED WIDTH
+            portraitBtn.setStyle(botUnselected);
+            portraitBtn.setAlignment(Pos.CENTER);
+            portraitBtn.setTextAlignment(TextAlignment.CENTER);
 
             botButtons.add(portraitBtn);
 
             portraitBtn.setOnAction(e -> {
                 selectedBotLevel = level;
                 SoundManager.playSound("click");
-                pvpBtn.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+                pvpBtn.setStyle(botUnselected);
                 for (Button b : botButtons) {
                     if (b == portraitBtn)
-                        b.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                        b.setStyle(botSelected);
                     else
-                        b.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+                        b.setStyle(botUnselected);
                 }
             });
             bots.getChildren().add(portraitBtn);
@@ -163,7 +221,7 @@ public class SetupScene {
 
         layout.getChildren().add(bots);
 
-        // --- Time Control UI ---
+        // --- Time Control UI (RetroByte Label) ---
         Label timeLabel = new Label("Time Control");
         timeLabel.setStyle(sectionStyle);
         layout.getChildren().add(timeLabel);
@@ -173,7 +231,7 @@ public class SetupScene {
         timeControls.getChildren().addAll(btn1, btn5, btn10);
         layout.getChildren().add(timeControls);
 
-        // --- Increment UI ---
+        // --- Increment UI (RetroByte Label) ---
         Label incLabel = new Label("Increment");
         incLabel.setStyle(sectionStyle);
         layout.getChildren().add(incLabel);
@@ -181,52 +239,60 @@ public class SetupScene {
         HBox incrementControls = new HBox(20);
         incrementControls.setAlignment(Pos.CENTER);
 
+        // Increment Buttons (Minecraftia)
         Button inc0 = new Button("+0s");
         Button inc5 = new Button("+5s");
         Button inc10 = new Button("+10s");
 
-        inc0.setStyle("-fx-background-color: #ffffff;");
-        inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-        inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        // Set Uniform Size for Increment Buttons
+        inc0.setPrefSize(100, 40);
+        inc5.setPrefSize(100, 40);
+        inc10.setPrefSize(100, 40);
+
+        inc0.setAlignment(Pos.CENTER);
+        inc5.setAlignment(Pos.CENTER);
+        inc10.setAlignment(Pos.CENTER);
+
+        inc0.setStyle(timeSelected);
+        inc5.setStyle(timeUnselected);
+        inc10.setStyle(timeUnselected);
 
         inc0.setOnAction(e -> {
             selectedIncrementMs = 0;
             SoundManager.playSound("click");
-            inc0.setStyle("-fx-background-color: #ffffff;");
-            inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-            inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc0.setStyle(timeSelected);
+            inc5.setStyle(timeUnselected);
+            inc10.setStyle(timeUnselected);
         });
         inc5.setOnAction(e -> {
             selectedIncrementMs = 5 * 1000;
             SoundManager.playSound("click");
-            inc5.setStyle("-fx-background-color: #ffffff;");
-            inc0.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-            inc10.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc5.setStyle(timeSelected);
+            inc0.setStyle(timeUnselected);
+            inc10.setStyle(timeUnselected);
         });
         inc10.setOnAction(e -> {
             selectedIncrementMs = 10 * 1000;
             SoundManager.playSound("click");
-            inc10.setStyle("-fx-background-color: #ffffff;");
-            inc0.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
-            inc5.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            inc10.setStyle(timeSelected);
+            inc0.setStyle(timeUnselected);
+            inc5.setStyle(timeUnselected);
         });
 
         incrementControls.getChildren().addAll(inc0, inc5, inc10);
         layout.getChildren().add(incrementControls);
 
-        // --- Start Button ---
+        // --- Start Button (RetroByte) ---
         Button startBtn = new Button("START");
-        startBtn.setPrefSize(120, 40);
-        startBtn.setStyle("""
-                    -fx-background-color: #124373;
-                    -fx-text-fill: white;
-                    -fx-font-size: 16px;
-                    -fx-font-weight: bold;
-                """);
+        startBtn.setPrefSize(160, 50);
+        startBtn.setAlignment(Pos.CENTER);
+        startBtn.setStyle(startStyle);
+
+        startBtn.setOnMouseEntered(e -> startBtn.setStyle(startHover));
+        startBtn.setOnMouseExited(e -> startBtn.setStyle(startStyle));
 
         startBtn.setOnAction(e -> {
             SoundManager.playSound("start");
-
             GameConfig config = new GameConfig(selectedTimeMs, selectedIncrementMs, selectedColor, selectedBotLevel);
             mainApp.startGame(config);
         });
@@ -239,31 +305,46 @@ public class SetupScene {
         root.getChildren().add(animatedBg);
         root.getChildren().add(layout);
 
-        return root; // Returns StackPane
+        return root;
     }
 
-    private HBox chooseColor() {
+    private HBox createColorSelector() {
+        // Load Minecraftia for these buttons
+        Font mineFont = Font.loadFont(getClass().getResourceAsStream("/Minecraftia-Regular.ttf"), 16);
+        String mineFamily = (mineFont != null) ? mineFont.getFamily() : "Verdana";
+
+        String baseColorStyle = "-fx-font-family: \"%s\"; -fx-font-size: 16px; -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 3; -fx-background-radius: 6; -fx-effect: dropshadow(one-pass-box, black, 0, 0, -4, 4);".formatted(mineFamily);
+        String colorSelected = baseColorStyle + "-fx-background-color: white; -fx-text-fill: #233447;";
+        String colorUnselected = baseColorStyle + "-fx-background-color: #7f8c8d; -fx-text-fill: white;";
+
         HBox colorControl = new HBox(30);
         colorControl.setAlignment(Pos.CENTER);
 
         Button btnW = new Button("White");
         Button btnB = new Button("Black");
 
-        btnW.setStyle("-fx-background-color: #ecf0f1; -fx-text-fill: black;"); // Default selected
-        btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+        // Uniform size for Color buttons
+        btnW.setPrefSize(100, 40);
+        btnB.setPrefSize(100, 40);
+
+        btnW.setAlignment(Pos.CENTER);
+        btnB.setAlignment(Pos.CENTER);
+
+        btnW.setStyle(colorSelected); // Default
+        btnB.setStyle(colorUnselected);
 
         btnW.setOnAction(e -> {
             selectedColor = Color.WHITE;
             SoundManager.playSound("click");
-            btnW.setStyle("-fx-background-color: #ffffff; -fx-text-fill: black;");
-            btnB.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btnW.setStyle(colorSelected);
+            btnB.setStyle(colorUnselected);
         });
 
         btnB.setOnAction(e -> {
             selectedColor = Color.BLACK;
             SoundManager.playSound("click");
-            btnB.setStyle("-fx-background-color: #ffffff; -fx-text-fill: black;");
-            btnW.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white;");
+            btnB.setStyle(colorSelected);
+            btnW.setStyle(colorUnselected);
         });
 
         colorControl.getChildren().addAll(btnW, btnB);
