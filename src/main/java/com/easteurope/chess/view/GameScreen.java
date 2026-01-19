@@ -276,7 +276,7 @@ public class GameScreen {
 
         root.setOnKeyPressed(e -> {
             switch (e.getCode()) {
-                case ESCAPE -> togglePause();
+                case P -> togglePause();
             }
         });
 
